@@ -1,7 +1,7 @@
 
 from math import pi
 
-from pico2d import SDLK_LEFT, SDLK_RIGHT, SDLK_SPACE, load_image
+from pico2d import SDLK_a, SDLK_LEFT, SDLK_RIGHT, SDLK_SPACE, load_image
 from transitions import Machine
 
 class Boy:
@@ -23,9 +23,15 @@ class Boy:
         self.image = load_image('animation_sheet.png')
         self.machine = Machine(
             model=self,
-            states=['IDLE', 'WALK', 'SLEEP'],
+            states=['IDLE', 'WALK', 'SLEEP', 'AUTORUN'],
             initial='IDLE',
             auto_transitions=False,
+        )
+        self.machine.add_transition(
+            trigger='start_auto_run',
+            source='IDLE',
+            dest='AUTORUN',
+            before='reset_idle_time',
         )
         self.machine.add_transition(
             trigger='start_walking',
@@ -71,6 +77,9 @@ class Boy:
         if self.state == 'SLEEP':
             if key == SDLK_SPACE:
                 self.wake_up()
+            return
+        if key == SDLK_a and self.state == 'IDLE':
+            self.start_auto_run()
             return
         if key not in (SDLK_LEFT, SDLK_RIGHT):
             self.reset_idle_time()
