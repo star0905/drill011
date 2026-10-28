@@ -14,7 +14,18 @@ class AutoRun:
 
     def update(self, boy, elapsed_time):
         self.elapsed_time += elapsed_time
-        boy.x += boy.face_dir * boy.WALK_SPEED * elapsed_time
+        next_x = boy.x + boy.face_dir * boy.WALK_SPEED * elapsed_time
+        left_edge = boy.SPRITE_WIDTH / 2
+        right_edge = boy.CANVAS_WIDTH - left_edge
+
+        if next_x <= left_edge:
+            boy.x = left_edge
+            boy.face_dir = 1
+        elif next_x >= right_edge:
+            boy.x = right_edge
+            boy.face_dir = -1
+        else:
+            boy.x = next_x
 
     def exit(self, boy):
         self.elapsed_time = 0.0
