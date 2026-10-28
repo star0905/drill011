@@ -4,6 +4,21 @@ from math import pi
 from pico2d import SDLK_a, SDLK_LEFT, SDLK_RIGHT, SDLK_SPACE, load_image
 from transitions import Machine
 
+
+class AutoRun:
+    def __init__(self):
+        self.elapsed_time = 0.0
+
+    def enter(self, boy):
+        self.elapsed_time = 0.0
+
+    def update(self, boy, elapsed_time):
+        self.elapsed_time += elapsed_time
+
+    def exit(self, boy):
+        self.elapsed_time = 0.0
+
+
 class Boy:
     CANVAS_WIDTH = 800
     SPRITE_WIDTH = 100
@@ -20,6 +35,7 @@ class Boy:
         self.idle_time = 0.0
         self.face_dir = 1
         self.pressed_keys = set()
+        self.auto_run = AutoRun()
         self.image = load_image('animation_sheet.png')
         self.machine = Machine(
             model=self,
@@ -31,7 +47,8 @@ class Boy:
             trigger='start_auto_run',
             source='IDLE',
             dest='AUTORUN',
-            before='reset_idle_time',
+            before='enter_auto_run',
+            after='reset_idle_time',
         )
         self.machine.add_transition(
             trigger='start_walking',
@@ -72,6 +89,9 @@ class Boy:
                     self.x + self.face_dir * self.WALK_SPEED * elapsed_time,
                 ),
             )
+        elif self.state == 'AUTORUN':
+            self.frame = (self.frame + 1) % 8
+            self.auto_run.update(self, elapsed_time)
 
     def handle_key(self, key):
         if self.state == 'SLEEP':
@@ -104,6 +124,12 @@ class Boy:
 
     def reset_idle_time(self):
         self.idle_time = 0.0
+
+    def enter_auto_run(self):
+        self.auto_run.enter(self)
+
+    def exit_auto_run(self):
+        self.auto_run.exit(self)
 
     def draw(self):
         if self.state == 'WALK':
