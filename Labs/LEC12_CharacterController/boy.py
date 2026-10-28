@@ -6,6 +6,8 @@ from transitions import Machine
 
 
 class AutoRun:
+    DURATION = 5.0
+
     def __init__(self):
         self.elapsed_time = 0.0
 
@@ -26,6 +28,8 @@ class AutoRun:
             boy.face_dir = -1
         else:
             boy.x = next_x
+        if self.elapsed_time >= self.DURATION:
+            boy.finish_auto_run()
 
     def exit(self, boy):
         self.elapsed_time = 0.0
@@ -60,6 +64,13 @@ class Boy:
             source='IDLE',
             dest='AUTORUN',
             before='enter_auto_run',
+            after='reset_idle_time',
+        )
+        self.machine.add_transition(
+            trigger='finish_auto_run',
+            source='AUTORUN',
+            dest='IDLE',
+            before='exit_auto_run',
             after='reset_idle_time',
         )
         self.machine.add_transition(
