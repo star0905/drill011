@@ -1,18 +1,21 @@
 
 from math import pi
 
-from pico2d import SDLK_LEFT, SDLK_RIGHT, load_image
+from pico2d import SDLK_LEFT, SDLK_RIGHT, SDLK_SPACE, load_image
 from transitions import Machine
 
 class Boy:
     CANVAS_WIDTH = 800
     SPRITE_WIDTH = 100
+    NORMAL_Y = 90
+    SLEEP_Y = 60
     SLEEP_AFTER = 3.0
     SLEEP_ANGLE = pi / 2
     WALK_SPEED = 150
 
     def __init__(self):
-        self.x, self.y = 400, 90
+        self.x = self.CANVAS_WIDTH / 2
+        self.y = self.NORMAL_Y
         self.frame = 0
         self.idle_time = 0.0
         self.face_dir = 1
@@ -66,7 +69,9 @@ class Boy:
 
     def handle_key(self, key):
         if self.state == 'SLEEP':
-            self.wake_up()
+            if key == SDLK_SPACE:
+                self.wake_up()
+            return
         if key not in (SDLK_LEFT, SDLK_RIGHT):
             self.reset_idle_time()
             return
@@ -97,6 +102,7 @@ class Boy:
         else:
             source_y = 300 if self.face_dir == 1 else 200
         angle = self.SLEEP_ANGLE if self.state == 'SLEEP' else 0
+        draw_y = self.SLEEP_Y if self.state == 'SLEEP' else self.y
         self.image.clip_composite_draw(
             self.frame * 100,
             source_y,
@@ -105,7 +111,7 @@ class Boy:
             angle,
             ' ',
             self.x,
-            self.y,
+            draw_y,
             self.SPRITE_WIDTH,
             self.SPRITE_WIDTH,
         )
