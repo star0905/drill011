@@ -14,6 +14,7 @@ class AutoRun:
 
     def update(self, boy, elapsed_time):
         self.elapsed_time += elapsed_time
+        boy.x += boy.face_dir * boy.WALK_SPEED * elapsed_time
 
     def exit(self, boy):
         self.elapsed_time = 0.0
@@ -132,7 +133,7 @@ class Boy:
         self.auto_run.exit(self)
 
     def draw(self):
-        if self.state == 'WALK':
+        if self.state in ('WALK', 'AUTORUN'):
             source_y = 100 if self.face_dir == 1 else 0
         else:
             source_y = 300 if self.face_dir == 1 else 200
