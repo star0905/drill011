@@ -1,0 +1,1501 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="함수 분해와 점진적 개발, AI 커밋과 push, e-class 제출을 익히는 2D 게임 프로그래밍 강의">
+<title>LEC 06 점진적 개발 실습</title>
+<style>
+
+    @import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css");
+    @import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap");
+
+    :root {
+      --bg: #edf1f5;
+      --paper: #ffffff;
+      --ink: #172033;
+      --muted: #5c6776;
+      --line: #d7dde6;
+      --accent: #1767a8;
+      --green: #16806f;
+      --code-bg: #101827;
+      --code-ink: #f0f6ff;
+      --code-font: "JetBrains Mono", Consolas, "Courier New", monospace;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: "Pretendard", "Malgun Gothic", "Segoe UI", Arial, sans-serif;
+    }
+
+    body { overflow: hidden; }
+
+    .app {
+      height: 100vh;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+    }
+
+    header.top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      padding: 14px 24px;
+      background: #fff;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .brand strong {
+      display: block;
+      font-size: 18px;
+    }
+
+    .brand span {
+      display: block;
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .counter {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: var(--muted);
+      font-size: 14px;
+      white-space: nowrap;
+    }
+
+    .bar {
+      width: 180px;
+      height: 8px;
+      background: #dfe6ef;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .bar-fill {
+      width: 0%;
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), var(--green));
+    }
+
+    main {
+      min-height: 0;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 320px;
+      gap: 18px;
+      padding: 18px 24px;
+    }
+
+    .stage {
+      min-width: 0;
+      min-height: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .slide {
+      display: none;
+      width: min(100%, 1240px);
+      height: min(100%, calc((100vw - 420px) * 0.5625));
+      min-height: 620px;
+      max-height: calc(100vh - 134px);
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 14px 34px rgba(23, 32, 51, 0.14);
+      grid-template-rows: auto 1fr;
+    }
+
+    .slide.active {
+      display: grid;
+    }
+
+    .slide-head {
+      padding: 28px 34px 18px;
+      border-bottom: 1px solid var(--line);
+      background: linear-gradient(180deg, #fff, #f7f9fc);
+    }
+
+    .kicker {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+      color: var(--accent);
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    .pill {
+      padding: 5px 10px;
+      border-radius: 999px;
+      background: #e8f2fb;
+      color: var(--accent);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 46px;
+      line-height: 1.14;
+      letter-spacing: 0;
+    }
+
+    .subtitle {
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 22px;
+      line-height: 1.4;
+    }
+
+    .slide-body {
+      min-height: 0;
+      padding: 26px 34px 30px;
+      overflow: auto;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(300px, 0.78fr);
+      gap: 26px;
+      align-items: start;
+    }
+
+    .bullets {
+      margin: 0;
+      padding-left: 28px;
+      font-size: 27px;
+      line-height: 1.44;
+    }
+
+    .bullets li { margin-bottom: 14px; }
+    .bullets strong { color: var(--accent); }
+
+    .note {
+      margin-top: 18px;
+      padding: 16px 18px;
+      border-left: 5px solid var(--green);
+      background: #edf8f5;
+      border-radius: 4px 8px 8px 4px;
+      font-size: 20px;
+      line-height: 1.5;
+    }
+
+    pre {
+      margin: 0;
+      padding: 18px;
+      border-radius: 8px;
+      background: var(--code-bg);
+      color: var(--code-ink);
+      overflow: auto;
+      font-family: var(--code-font);
+      font-size: 18px;
+      line-height: 1.45;
+      white-space: pre;
+    }
+
+    code.fn {
+      color: #8ee9ff;
+      text-decoration: underline;
+      cursor: pointer;
+    }
+
+    .diagram {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 18px;
+      background: #f6f8fb;
+    }
+
+    .flow {
+      display: grid;
+      gap: 12px;
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    .flow-row {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .box {
+      min-height: 62px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 10px;
+      border: 2px solid #b8cadc;
+      border-radius: 8px;
+      background: #fff;
+    }
+
+    .arrow {
+      color: var(--accent);
+      font-size: 28px;
+      font-weight: 900;
+    }
+
+    .canvas {
+      position: relative;
+      aspect-ratio: 4 / 3;
+      border: 2px solid #31435c;
+      border-radius: 8px;
+      background:
+        linear-gradient(#d9e4ef 1px, transparent 1px),
+        linear-gradient(90deg, #d9e4ef 1px, transparent 1px),
+        #fff;
+      background-size: 10% 10%;
+      overflow: hidden;
+    }
+
+    .grass {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 22%;
+      background: linear-gradient(180deg, #72bc62, #347a3d);
+      border-top: 4px solid #275e31;
+    }
+
+    .boy {
+      position: absolute;
+      width: 48px;
+      height: 64px;
+      border: 2px solid #183152;
+      border-radius: 18px 18px 10px 10px;
+      background: linear-gradient(180deg, #4e90d8 0 54%, #263d66 54% 100%);
+      box-shadow: 0 5px 0 rgba(24, 49, 82, 0.12);
+    }
+
+    .boy::before {
+      content: "";
+      position: absolute;
+      width: 24px;
+      height: 24px;
+      left: 10px;
+      top: -18px;
+      border: 2px solid #183152;
+      border-radius: 50%;
+      background: #f1c69a;
+    }
+
+    .boy.center { left: 50%; top: 50%; transform: translate(-50%, -50%); }
+    .boy.a { left: 15%; bottom: 16%; }
+    .boy.b { left: 43%; bottom: 43%; }
+    .boy.c { left: 68%; bottom: 20%; }
+
+    .label {
+      position: absolute;
+      padding: 3px 7px;
+      border-radius: 4px;
+      background: rgba(255, 255, 255, 0.9);
+      color: #31435c;
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    .lb { left: 8px; bottom: 8px; }
+    .rb { right: 8px; bottom: 8px; }
+    .lt { left: 8px; top: 8px; }
+    .ct { left: 50%; top: 50%; transform: translate(-50%, -50%); color: var(--accent); }
+
+    details.detail {
+      margin-top: 22px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      overflow: hidden;
+      background: #fff;
+    }
+
+    details.detail summary {
+      padding: 15px 18px;
+      cursor: pointer;
+      list-style: none;
+      background: #f2f7fc;
+      color: var(--accent);
+      font-size: 19px;
+      font-weight: 800;
+    }
+
+    details.detail summary::-webkit-details-marker { display: none; }
+
+    .detail-text {
+      padding: 18px;
+      color: #263244;
+      font-size: 18px;
+      line-height: 1.62;
+    }
+
+    .detail-text p {
+      margin: 0 0 14px;
+    }
+
+    .panel {
+      min-height: 0;
+      display: grid;
+      grid-template-rows: auto 1fr;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .panel-head {
+      padding: 16px 18px;
+      border-bottom: 1px solid var(--line);
+      background: #f7f9fc;
+    }
+
+    .panel-head h2 {
+      margin: 0;
+      font-size: 20px;
+    }
+
+    .panel-body {
+      min-height: 0;
+      overflow: auto;
+      padding: 16px 18px 20px;
+    }
+
+    .toc {
+      display: grid;
+      gap: 8px;
+    }
+
+    .toc button {
+      width: 100%;
+      border: 1px solid transparent;
+      border-radius: 6px;
+      background: transparent;
+      padding: 9px 10px;
+      text-align: left;
+      color: var(--ink);
+      font-size: 14px;
+      line-height: 1.32;
+      cursor: pointer;
+    }
+
+    .toc button:hover { background: #eef5fb; }
+    .toc button.active {
+      border-color: #b8d6ee;
+      background: #e6f2fb;
+      color: var(--accent);
+      font-weight: 800;
+    }
+
+    .func-card {
+      margin-top: 18px;
+      padding-top: 16px;
+      border-top: 1px solid var(--line);
+    }
+
+    .func-card h3 {
+      margin: 0 0 8px;
+      color: var(--accent);
+      font-size: 19px;
+    }
+
+    .func-card p {
+      margin: 0 0 10px;
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.5;
+    }
+
+    .func-card .sample {
+      display: block;
+      padding: 10px;
+      border-radius: 6px;
+      background: #eef2f6;
+      color: var(--ink);
+      font-family: var(--code-font);
+      white-space: pre-wrap;
+    }
+
+    footer.controls {
+      display: grid;
+      grid-template-columns: auto 1fr auto auto auto;
+      gap: 12px;
+      align-items: center;
+      padding: 12px 24px 16px;
+      background: #fff;
+      border-top: 1px solid var(--line);
+    }
+
+    button.nav, button.util {
+      height: 42px;
+      padding: 0 16px;
+      border: 1px solid #b8c6d6;
+      border-radius: 6px;
+      background: #fff;
+      color: var(--ink);
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    button.nav:hover, button.util:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    button.nav:disabled {
+      cursor: not-allowed;
+      opacity: 0.45;
+    }
+
+    .hint {
+      text-align: center;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .assignment-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+    }
+
+    .assignment {
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #f6f8fb;
+    }
+
+    .assignment h3 {
+      margin: 0 0 10px;
+      color: var(--accent);
+      font-size: 24px;
+    }
+
+    .assignment ul {
+      margin: 0;
+      padding-left: 22px;
+      font-size: 19px;
+      line-height: 1.45;
+    }
+
+    @media (max-width: 1080px) {
+      body { overflow: auto; }
+      .app { height: auto; min-height: 100vh; }
+      main { grid-template-columns: 1fr; }
+      .slide { height: auto; min-height: 0; max-height: none; }
+      .grid, .assignment-grid { grid-template-columns: 1fr; }
+      footer.controls {
+        position: sticky;
+        bottom: 0;
+        grid-template-columns: 1fr 1fr;
+      }
+      .hint { display: none; }
+    }
+  
+
+    .loader {
+      width: min(100%, 900px);
+      margin: 40px auto;
+      padding: 28px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      box-shadow: 0 14px 34px rgba(23, 32, 51, 0.12);
+      font-size: 18px;
+      line-height: 1.6;
+    }
+
+    .loader h1 {
+      font-size: 32px;
+      margin-bottom: 12px;
+    }
+
+    .loader input {
+      margin-top: 14px;
+      font-size: 16px;
+    }
+
+    body.fullscreen-mode {
+      overflow: hidden;
+      background: #000;
+      --fs-title: clamp(60px, 3.42vw, 110px);
+      --fs-subtitle: clamp(26px, 1.5vw, 53px);
+      --fs-kicker: clamp(20px, 1.14vw, 38px);
+      --fs-pill: clamp(16px, 0.86vw, 29px);
+      --fs-body: clamp(38px, 2.18vw, 70px);
+      --fs-note: clamp(26px, 1.44vw, 48px);
+      --fs-code: clamp(23px, 1.25vw, 41px);
+      --fs-flow: clamp(26px, 1.5vw, 50px);
+      --fs-label: clamp(20px, 1.14vw, 36px);
+      --fs-assignment-title: clamp(31px, 1.74vw, 58px);
+      --fs-assignment-body: clamp(26px, 1.38vw, 46px);
+      --fs-pad-x: clamp(50px, 2.64vw, 110px);
+      --fs-pad-y: clamp(34px, 1.86vw, 77px);
+    }
+
+    body.fullscreen-mode header.top,
+    body.fullscreen-mode .panel,
+    body.fullscreen-mode footer.controls,
+    body.fullscreen-mode details.detail {
+      display: none;
+    }
+
+    body.fullscreen-mode .app {
+      height: 100vh;
+      min-height: 0;
+      display: block;
+    }
+
+    body.fullscreen-mode main {
+      width: 100vw;
+      height: 100vh;
+      padding: 0;
+      display: block;
+    }
+
+    body.fullscreen-mode .stage {
+      width: 100vw;
+      height: 100vh;
+      display: block;
+    }
+
+    body.fullscreen-mode .slide {
+      width: 100vw;
+      height: 100vh;
+      min-height: 0;
+      max-height: none;
+      border: 0;
+      border-radius: 0;
+      box-shadow: none;
+    }
+
+    body.fullscreen-mode .slide-head {
+      padding: var(--fs-pad-y) var(--fs-pad-x) clamp(24px, 1.26vw, 50px);
+    }
+
+    body.fullscreen-mode .kicker {
+      font-size: var(--fs-kicker);
+      margin-bottom: clamp(12px, 0.62vw, 24px);
+    }
+
+    body.fullscreen-mode .pill {
+      font-size: var(--fs-pill);
+      padding: clamp(6px, 0.34vw, 12px) clamp(12px, 0.62vw, 24px);
+    }
+
+    body.fullscreen-mode h1 {
+      font-size: var(--fs-title);
+      line-height: 1.12;
+    }
+
+    body.fullscreen-mode .subtitle {
+      margin-top: clamp(14px, 0.74vw, 29px);
+      font-size: var(--fs-subtitle);
+      line-height: 1.38;
+    }
+
+    body.fullscreen-mode .slide-body {
+      padding: var(--fs-pad-y) var(--fs-pad-x) clamp(41px, 2.16vw, 86px);
+    }
+
+    body.fullscreen-mode .grid {
+      gap: clamp(36px, 1.86vw, 77px);
+      grid-template-columns: minmax(0, 1fr) minmax(clamp(408px, 21.24vw, 816px), 0.8fr);
+    }
+
+    body.fullscreen-mode .bullets {
+      padding-left: clamp(38px, 2vw, 79px);
+      font-size: var(--fs-body);
+      line-height: 1.42;
+    }
+
+    body.fullscreen-mode .bullets li {
+      margin-bottom: clamp(19px, 1vw, 41px);
+    }
+
+    body.fullscreen-mode .note {
+      margin-top: clamp(24px, 1.26vw, 50px);
+      padding: clamp(22px, 1.14vw, 46px) clamp(24px, 1.26vw, 50px);
+      border-left-width: clamp(7px, 0.38vw, 14px);
+      font-size: var(--fs-note);
+      line-height: 1.5;
+    }
+
+    body.fullscreen-mode pre {
+      padding: clamp(24px, 1.26vw, 50px);
+      font-size: var(--fs-code);
+      line-height: 1.45;
+    }
+
+    body.fullscreen-mode .diagram {
+      padding: clamp(26px, 1.38vw, 55px);
+    }
+
+    body.fullscreen-mode .flow {
+      gap: clamp(17px, 0.88vw, 36px);
+      font-size: var(--fs-flow);
+    }
+
+    body.fullscreen-mode .box {
+      min-height: clamp(91px, 4.74vw, 182px);
+      padding: clamp(22px, 1.14vw, 46px);
+    }
+
+    body.fullscreen-mode .arrow {
+      font-size: clamp(41px, 2.12vw, 82px);
+    }
+
+    body.fullscreen-mode .canvas {
+      min-height: clamp(504px, 26.28vw, 912px);
+    }
+
+    body.fullscreen-mode .label {
+      padding: clamp(6px, 0.34vw, 12px) clamp(11px, 0.56vw, 22px);
+      font-size: var(--fs-label);
+    }
+
+    body.fullscreen-mode .assignment-grid {
+      gap: clamp(24px, 1.26vw, 50px);
+    }
+
+    body.fullscreen-mode .assignment {
+      padding: clamp(24px, 1.26vw, 50px);
+    }
+
+    body.fullscreen-mode .assignment h3 {
+      font-size: var(--fs-assignment-title);
+      margin-bottom: clamp(14px, 0.74vw, 29px);
+    }
+
+    body.fullscreen-mode .assignment ul {
+      padding-left: clamp(31px, 1.62vw, 62px);
+      font-size: var(--fs-assignment-body);
+      line-height: 1.45;
+    }
+
+/* LEC06 content adapters; the LEC05 shell and typography remain authoritative. */
+*{letter-spacing:0}button{font-family:inherit}button:focus-visible,summary:focus-visible{outline:3px solid #bb8619;outline-offset:3px}
+.app{grid-template-columns:minmax(0,1fr)}main,.slide,.content,.visual{min-width:0}
+.content{font-size:27px;line-height:1.44;overflow-wrap:anywhere}
+.content p{margin:0 0 18px}.content ul,.content ol{margin:0;padding-left:28px}
+.content li{margin-bottom:14px}.content strong{color:var(--accent)}
+.content pre+pre{margin-top:18px}pre{max-width:100%}code{font-family:var(--code-font)}
+p code,li code{font-size:.9em;overflow-wrap:anywhere}
+table{border-collapse:collapse;width:100%;table-layout:fixed;font-size:19px;margin:16px 0}
+th,td{padding:12px;text-align:left;border-bottom:1px solid var(--line);overflow-wrap:anywhere}th{color:var(--accent);background:#eef5fb}
+.visual svg{display:block;width:100%;height:auto;background:#f6f8fb;border:1px solid var(--line);border-radius:8px}
+.visual text{font-family:Pretendard,'Malgun Gothic',sans-serif;fill:var(--ink);font-size:17px}
+.lec-flow{display:flex;align-items:center;flex-wrap:wrap;gap:12px;margin:16px 0}
+.lec-flow b{font-size:20px;font-weight:700;padding:12px;border:2px solid #b8cadc;border-radius:8px;background:#fff}
+.lec-flow span{color:var(--accent);font-size:28px}.console{margin-top:18px}
+.extras{border-top:1px solid var(--line);padding-top:16px;margin-top:22px;font-size:18px;line-height:1.62}
+.extras h2{font-size:19px;color:var(--accent);margin:0 0 10px}.extras pre{white-space:pre-wrap;overflow-wrap:anywhere}
+.prompt{margin-top:22px}.prompt pre{white-space:pre-wrap;overflow-wrap:anywhere}
+.copy{display:block;margin:0 0 8px auto;background:#fff;border:1px solid #b8c6d6;border-radius:6px;padding:7px 12px;cursor:pointer}
+.detail-text pre{white-space:pre-wrap;overflow-wrap:anywhere;margin:14px 0}.detail-text{overflow-wrap:anywhere}
+.cover-slide{grid-template-rows:1fr!important}.cover{align-self:center;padding:42px 48px}
+.cover h1{line-height:1.3}.cover .date{margin-top:38px;font-size:22px;color:var(--muted)}.cover .presenter{margin-top:16px;font-size:24px}
+.cover-mode .panel{visibility:hidden}.cover-mode .top .brand,.cover-mode .counter{visibility:hidden}
+.cover-mode #detail-button{display:none}.cover-mode .controls{grid-template-columns:auto 1fr auto auto}
+.status{position:fixed;bottom:80px;left:24px;background:var(--ink);color:white;padding:10px 16px;border-radius:6px;z-index:10}.status:empty{display:none}
+body.fullscreen-mode .content{font-size:var(--fs-body)}
+body.fullscreen-mode .extras,body.fullscreen-mode .copy{display:none}
+body.fullscreen-mode .prompt{margin-top:24px}
+body.fullscreen-mode .cover{padding:var(--fs-pad-y) var(--fs-pad-x)}
+body.fullscreen-mode .cover h1{font-size:var(--fs-title)}
+body.fullscreen-mode .cover .date,body.fullscreen-mode .cover .presenter{font-size:var(--fs-subtitle)}
+@media(max-width:1080px){.cover-mode .panel{display:none}.cover-mode .controls{grid-template-columns:1fr 1fr}.content pre{font-size:16px}.visual{margin-top:20px}.content{font-size:23px}}
+@media(max-width:600px){header.top{padding:12px 14px;gap:10px}.bar{width:65px}.brand strong{font-size:15px}.brand span{font-size:12px}
+main{padding:12px;gap:12px}.slide-head{padding:22px 20px 16px}h1{font-size:30px}.subtitle{font-size:18px}
+.slide-body{padding:20px}.content{font-size:21px}.content pre{font-size:14px}.detail-text{font-size:17px}
+.pill{font-size:12px}.kicker{font-size:14px}footer.controls{padding:10px 12px}.cover{padding:30px 24px}.cover .date{font-size:18px}.cover .presenter{font-size:20px}
+table{font-size:15px}td,th{padding:8px}.panel-head h2{font-size:18px}
+body.fullscreen-mode h1{font-size:32px}body.fullscreen-mode .slide-head,body.fullscreen-mode .slide-body{padding:24px}
+body.fullscreen-mode .grid{grid-template-columns:minmax(0,1fr)}body.fullscreen-mode .content{font-size:23px}
+body.fullscreen-mode .cover h1{font-size:34px}body.fullscreen-mode .cover{padding:24px}}
+.fn{display:inline;border:0;padding:0;background:none;color:#8ee9ff;font:inherit;text-decoration:underline;cursor:pointer}
+</style>
+</head>
+<body class="cover-mode"><div class="app">
+<header class="top"><div class="brand"><strong>2D 게임 프로그래밍 - LEC06</strong><span id="slide-title"></span></div><div class="counter"><div class="bar"><div class="bar-fill" id="bar"></div></div><span id="count"></span></div></header>
+<main><section class="stage" id="stage" aria-label="강의 슬라이드"></section><aside class="panel"><div class="panel-head"><h2>목차와 함수 설명</h2></div><div class="panel-body"><nav class="toc" id="toc" aria-label="슬라이드 목차"></nav><section class="func-card" id="func-card"><h3>함수 설명</h3><p>코드의 함수 이름을 선택하면 설명이 표시됩니다.</p></section></div></aside></main>
+<footer class="controls"><button class="nav" id="prev">이전</button><div class="hint" id="page"></div><button class="util" id="detail-button" aria-expanded="false">상세 설명</button><button class="util" id="fullscreen">전체 화면</button><button class="nav" id="next">다음</button></footer>
+</div><div class="status" id="status" role="status"></div>
+<script type="application/json" id="deck-data">{
+  "title": "LEC 06 점진적 개발 실습",
+  "date": "2026년 9월 19일",
+  "presenter": "한국공학대학교 이대현 교수",
+  "slides": [
+    {
+      "id": "lec06-title",
+      "type": "title",
+      "navTitle": "제목",
+      "section": "\"\"",
+      "kicker": "lectureDate 확정값",
+      "subtitle": "한국공학대학교 이대현 교수",
+      "layout": "title",
+      "visual": "없음",
+      "title": "제목",
+      "body": [
+        "\u003cul>\n\u003cli>LEC 06 점진적 개발 실습\u003c/li>\n\u003cli>수업일: [실제 수업일 입력]\u003c/li>\n\u003cli>한국공학대학교 이대현 교수\u003c/li>\n",
+        "\u003c/ul>"
+      ],
+      "detailHtml": "",
+      "prompt": "",
+      "extras": []
+    },
+    {
+      "id": "lec06-objectives",
+      "type": "content",
+      "navTitle": "학습 목표",
+      "section": "수업 안내",
+      "kicker": "학습 목표",
+      "subtitle": "구현부터 제출까지 한 흐름으로 익힌다.",
+      "layout": "bullets",
+      "visual": "없음",
+      "title": "학습 목표",
+      "body": [
+        "\u003cul>\n\u003cli>큰 문제를 작은 함수로 나눈다.\u003c/li>\n\u003cli>조금 구현하고 바로 실행하여 확인한다.\u003c/li>\n\u003cli>작은 진전마다 AI로 ",
+        "커밋한다.\u003c/li>\n\u003cli>본인 저장소로 push하고, 최종 커밋 URL을 제출한다.\u003c/li>\n\u003c/ul>"
+      ],
+      "detailHtml": "",
+      "prompt": "",
+      "extras": []
+    },
+    {
+      "id": "lec06-workspace",
+      "type": "content",
+      "navTitle": "실습 환경",
+      "section": "수업 안내",
+      "kicker": "준비 확인",
+      "subtitle": "본인의 fork 저장소에서 실습을 시작한다.",
+      "layout": "flow",
+      "visual": "교수자 GitHub → 학생 GitHub fork → 학생 PC 흐름. origin은 학생 원격 저장소, upstream은 교수자 원본으로 표시한다.",
+      "title": "지난 시간 준비한 환경",
+      "body": "\u003cp>교수자 저장소 → 본인 계정으로 fork → 본인 PC에 내려받기 → VS Code에서 실습\u003c/p>",
+      "detailHtml": "",
+      "prompt": "",
+      "extras": []
+    },
+    {
+      "id": "lec06-save-commit-push",
+      "type": "content",
+      "navTitle": "저장·커밋·push",
+      "section": "수업 안내",
+      "kicker": "Git 개념",
+      "subtitle": "각 작업이 어디에 무엇을 남기는지 구분한다.",
+      "layout": "table",
+      "visual": "화면 내용의 4행 비교표를 그대로 사용한다.",
+      "title": "저장, 커밋, push, 제출",
+      "body": [
+        "\u003ctable>\n\u003cthead>\n\u003ctr>\n\u003cth>작업\u003c/th>\n\u003cth>결과가 남는 위치\u003c/th>\n\u003cth>의미\u003c/th>\n\u003c/tr>\n\u003c/thead>\n",
+        "\u003ctbody>\n\u003ctr>\n\u003ctd>저장\u003c/td>\n\u003ctd>내 PC의 파일\u003c/td>\n\u003ctd>편집 내용 저장\u003c/td>\n\u003c/tr>\n\u003ctr>\n\u003ctd>",
+        "커밋\u003c/td>\n\u003ctd>내 PC의 Git 저장소\u003c/td>\n\u003ctd>변경 이력 기록\u003c/td>\n\u003c/tr>\n\u003ctr>\n\u003ctd>push\u003c/td>\n\u003ctd>본인 ",
+        "GitHub 저장소\u003c/td>\n\u003ctd>커밋 업로드\u003c/td>\n\u003c/tr>\n\u003ctr>\n\u003ctd>URL 제출\u003c/td>\n\u003ctd>e-class\u003c/td>\n\u003ctd>",
+        "평가할 최종 버전 전달\u003c/td>\n\u003c/tr>\n\u003c/tbody>\n\u003c/table>"
+      ],
+      "detailHtml": "",
+      "prompt": "",
+      "extras": []
+    },
+    {
+      "id": "lec06-workflow",
+      "type": "content",
+      "navTitle": "수업 진행 흐름",
+      "section": "수업 안내",
+      "kicker": "진행 절차",
+      "subtitle": "작은 단계는 커밋하고 과제 완료 때 최종 push한다.",
+      "layout": "flow",
+      "title": "실습 전체 진행 흐름",
+      "body": [
+        "\u003cp>최소 기능 구현 → 실행 확인 → 커밋(AI활용) : 계속 반복하면서 완성해 나감.\u003c/p>\n\u003cp>서브 과제 완료 → push → ",
+        "GitHub 확인\u003c/p>\n\u003cp>모든 과제 완료 → 최종 커밋 URL 확인 → e-class 제출\u003c/p>"
+      ],
+      "detailHtml": [
+        "\u003cp>이번 실습은 작은 기능 하나를 구현하고, 실행 결과를 확인하고, 커밋하는 과정을 반복한다. 기대한 결과가 나오지 않으면 코드를 수정하고 ",
+        "다시 확인한다. 한 단계가 동작하는 것을 확인한 뒤 다음 기능을 추가한다.\u003c/p>\n\u003cp>서브 과제 하나를 마치면 그동안 쌓인 커밋을 본인 ",
+        "GitHub 저장소로 push한다. 작은 구현 단계는 커밋으로 기록하고, 서브 과제의 완료 결과는 GitHub에서 확인하는 흐름이다.\u003c/p>\n",
+        "\u003cp>모든 과제를 마친 뒤에는 마지막 수정까지 GitHub에 반영됐는지 점검하고, 평가받을 최종 커밋의 URL을 e-class에 제출한다.\u003c/p>"
+      ],
+      "prompt": "",
+      "extras": []
+    },
+    {
+      "id": "lec06-requirements",
+      "type": "content",
+      "navTitle": "실습 요구사항",
+      "section": "수업 안내",
+      "kicker": "과제 목표",
+      "subtitle": "원운동·사각운동·삼각운동을 순서대로 반복한다.",
+      "layout": "diagram",
+      "visual": "원형경로 → 사각형 → 삼각형 경로와 반복 화살표.",
+      "title": "오늘 실습 목표",
+      "body": "\u003cul>\n\u003cli>원운동\u003c/li>\n\u003cli>사각 운동\u003c/li>\n\u003cli>삼각 운동\u003c/li>\n\u003cli>세 운동의 순차적 무한 반복\u003c/li>\n\u003c/ul>",
+      "detailHtml": [
+        "\u003cp>캐릭터가 원, 사각, 삼각 경로를 차례로 한 바퀴씩 이동하도록 만든다. 삼각 운동이 끝나면 원운동으로 돌아가 같은 순서를 계속 ",
+        "반복한다.\u003c/p>\n\u003cp>먼저 반복 구조와 세 운동 함수의 호출 순서를 작성한다. 이어 원운동을 구현하고, 사각 운동과 삼각 운동을 한 단계씩 ",
+        "추가한다. 최종 결과뿐 아니라 이 결과를 작은 단계로 나누어 완성하는 과정도 이번 실습의 목표다.\u003c/p>"
+      ],
+      "prompt": "",
+      "extras": []
+    },
+    {
+      "id": "lec06-loop",
+      "type": "content",
+      "navTitle": "반복 구조",
+      "section": "점진적 구현",
+      "kicker": "실습 1",
+      "subtitle": "가장 큰 반복 구조부터 작성한다.",
+      "layout": "code",
+      "visual": "없음",
+      "title": "큰 구조부터 작성하기",
+      "body": [
+        "\u003cp>가장 큰 요구사항: 여러 운동을 계속 반복한다.\u003c/p>\n\u003cpre>\u003ccode class=\"language-python\">while True:\n",
+        "    pass\n\u003c/code>\u003c/pre>"
+      ],
+      "detailHtml": [
+        "\u003cp>세 운동을 계속 반복해야 하므로 가장 바깥 구조를 \u003ccode>while True:\u003c/code>로 작성한다. 조건이 항상 참이어서 반복문 ",
+        "안의 코드가 계속 실행된다. 구체적인 이동 코드는 이 구조 안에 차례로 넣을 것이다.\u003c/p>\n\u003cp>Python에서는 반복문의 본문을 비워 둘 수 ",
+        "없으므로, 지금은 아무 동작도 하지 않는 \u003ccode>pass\u003c/code>를 들여쓰기해 넣는다. 이후 이 자리를 세 운동 함수를 호출하는 코드로 ",
+        "바꾼다.\u003c/p>\n\u003cp>이 코드를 실행해도 창이나 메시지는 나타나지 않는다. 오류 없이 실행이 유지되는지만 확인한 뒤 IDE의 중지 기능으로 ",
+        "종료한다. 이 단계에서는 전체 반복 구조를 실행할 수 있는 상태로 만드는 데 집중한다.\u003c/p>"
+      ],
+      "prompt": "",
+      "extras": []
+    },
+    {
+      "id": "lec06-ai-commit",
+      "type": "content",
+      "navTitle": "AI 커밋",
+      "section": "점진적 구현",
+      "kicker": "기록하기",
+      "subtitle": "확인한 변경을 실제 커밋으로 남긴다.",
+      "layout": "prompt",
+      "visual": "없음",
+      "title": "첫 커밋",
+      "body": [
+        "\u003cul>\n\u003cli>직접 실행하여 결과 확인\u003c/li>\n\u003cli>VS Code Source Control에서 변경 파일 확인\u003c/li>\n\u003cli>이번 ",
+        "커밋에 포함할 파일을 staging\u003c/li>\n\u003cli>AI로 Staged Changes 커밋\u003c/li>\n\u003cli>메시지와 변경 파일 확인\u003c/li>\n",
+        "\u003c/ul>"
+      ],
+      "detailHtml": [
+        "\u003cp>코드를 실행해 확인한 뒤 VS Code 왼쪽의 Source Control을 연다. \u003ccode>Changes\u003c/code>에는 아직 커밋 ",
+        "대상으로 선택하지 않은 변경 파일이 표시된다. 이번 실습 단계에서 수정한 파일을 확인하고 파일 옆의 \u003ccode>+\u003c/code> 버튼을 눌러 ",
+        "staging한다.\u003c/p>\n\u003cp>staging한 파일은 \u003ccode>Staged Changes\u003c/code>로 이동한다. 커밋에는 이 영역에 있는 ",
+        "변경만 포함되므로, 커밋하기 전에 파일 이름과 변경 내용을 다시 확인한다. 다른 과제나 개인 메모처럼 이번 단계와 관계없는 변경은 \u003ccode>",
+        "Changes\u003c/code>에 그대로 둔다.\u003c/p>\n\u003cp>그다음 AI에게 \u003ccode>Staged Changes\u003c/code>만 커밋하도록 요청한다. ",
+        "완료 후에는 커밋 메시지와 포함된 파일을 확인하고, staging하지 않은 변경이 작업 폴더에 그대로 남아 있는지도 살펴본다.\u003c/p>"
+      ],
+      "prompt": "\u003cpre>\u003ccode class=\"language-text\">방금 무한 반복 구조를 작성하고 직접 실행해 확인했어.\nVS Code에서 이번 실습 단계에 해당하는 파일을 staging했어.\nStaged Changes를 확인하고, staging된 파일만 커밋해 줘.\nstaging되지 않은 파일은 추가하지 말아 줘.\n변경 내용에 맞는 한국어 커밋 메시지를 작성해 줘.\n완료 후 커밋 해시, 메시지, 포함된 파일, 남은 변경을 알려줘.\n이번에는 커밋까지만 진행해 줘.\n\u003c/code>\u003c/pre>",
+      "extras": []
+    },
+    {
+      "id": "lec06-functions",
+      "type": "content",
+      "navTitle": "함수 뼈대",
+      "section": "점진적 구현",
+      "kicker": "실습 2",
+      "subtitle": "함수 이름으로 전체 실행 흐름을 표현한다.",
+      "layout": "code",
+      "visual": "없음",
+      "title": "함수 호출로 전체 흐름 표현하기",
+      "body": [
+        "\u003cpre>\u003ccode class=\"language-python\">def move_circle():\n    pass\n\ndef ",
+        "move_rectangle():\n    pass\n\ndef move_triangle():\n    pass\n\nwhile True:\n    ",
+        "move_circle()\n    move_rectangle()\n    move_triangle()\n\u003c/code>\u003c/pre>"
+      ],
+      "detailHtml": [
+        "\u003cp>세 운동을 각각 \u003ccode>move_circle()\u003c/code>, \u003ccode>move_rectangle()\u003c/code>, \u003ccode>",
+        "move_triangle()\u003c/code>이라는 함수로 나눈다. 반복문에서 이 함수를 순서대로 호출하면 원운동, 사각 운동, 삼각 운동을 ",
+        "반복한다는 전체 흐름이 코드에 드러난다.\u003c/p>\n\u003cp>아직 좌표를 계산하지 않으므로 함수 안에는 \u003ccode>pass\u003c/code>를 둔다. 각 ",
+        "함수가 맡을 일을 먼저 정하고, 세부 구현은 하나씩 채워 나간다. 함수 정의를 반복문 위에 두면 첫 호출 전에 함수가 준비된다.\u003c/p>"
+      ],
+      "prompt": "",
+      "extras": []
+    },
+    {
+      "id": "lec06-trace",
+      "type": "content",
+      "navTitle": "호출 순서 확인",
+      "section": "점진적 구현",
+      "kicker": "실습 3",
+      "subtitle": "실제 애니메이션을 구현하기 앞서 먼저 제어 흐름을 검증한다.",
+      "layout": "code",
+      "visual": "예상 콘솔 출력 circle, rectangle, triangle을 순서대로 보여 준다. 코드 아래 보조 출력 영역으로 배치한다.",
+      "title": "흐름 검증",
+      "body": [
+        "\u003cpre>\u003ccode class=\"language-python\">def move_circle():\n    print('circle')\n\ndef ",
+        "move_rectangle():\n    print('rectangle')\n\ndef move_triangle():\n    ",
+        "print('triangle')\n\u003c/code>\u003c/pre>"
+      ],
+      "detailHtml": [
+        "\u003cp>앞 단계에서 작성한 각 함수의 \u003ccode>pass\u003c/code>를 \u003ccode>print()\u003c/code>로 바꾼다. 기존 반복문과 함께 ",
+        "실행하면 \u003ccode>circle\u003c/code>, \u003ccode>rectangle\u003c/code>, \u003ccode>triangle\u003c/code>이 차례로 ",
+        "출력된다. 아직 그래픽을 그리지 않아도 함수가 의도한 순서로 호출되는지 확인할 수 있다.\u003c/p>\n\u003cp>출력이 계속 쌓이는 것을 막고 한 묶음만 ",
+        "확인하려면, 반복문 안의 세 함수 호출 뒤에 임시로 \u003ccode>break\u003c/code>를 넣는다. 세 호출과 같은 들여쓰기 수준에 두면 삼각 운동 ",
+        "함수까지 실행한 뒤 반복문을 빠져나온다.\u003c/p>\n\u003cp>이 단계의 확인 대상은 함수 호출 순서다. 이동 동작은 다음 단계에서 구현한다. 나중에 ",
+        "전체 운동을 반복할 때에는 임시 \u003ccode>break\u003c/code>를 제거한다.\u003c/p>"
+      ],
+      "prompt": "",
+      "extras": [
+        {
+          "title": "확인 및 커밋",
+          "html": "\u003cp>콘솔에서 원, 사각, 삼각 순서가 맞는지 확인한다.\u003c/p>\n\u003cp>AI 요청의 단계 설명: '출력문으로 세 운동 함수의 호출 순서를 확인했어.'\u003c/p>"
+        }
+      ]
+    },
+    {
+      "id": "lec06-incremental",
+      "type": "content",
+      "navTitle": "점진적 개발",
+      "section": "점진적 구현",
+      "kicker": "개발 습관",
+      "subtitle": "작은 변경과 짧은 검증을 반복한다.",
+      "layout": "flow",
+      "visual": "작은 수정 → 실행 → 확인 → AI 커밋 → 다음 수정의 순환.",
+      "title": "작게 작성하고 바로 확인하기",
+      "body": [
+        "\u003cp>작은 수정 → 실행 → 확인 → AI 커밋\u003c/p>\n\u003cul>\n\u003cli>한 번에 확인할 수 있는 크기로 구현한다.\u003c/li>\n\u003cli>문제가 생기면 ",
+        "최근 변경부터 살펴본다.\u003c/li>\n\u003cli>정상 동작하는 지점을 기록한다.\u003c/li>\n\u003c/ul>"
+      ],
+      "detailHtml": [
+        "\u003cp>한 단계의 크기는 코드 줄 수보다 확인할 목표를 기준으로 정한다. '캐릭터를 중앙에 표시한다', '사각형의 상단을 오른쪽으로 이동한다'처럼 ",
+        "결과를 분명하게 판단할 수 있는 단위로 나눈다.\u003c/p>\n\u003cp>작게 수정하면 정상 동작하던 상태와 달라진 부분도 적다. 문제가 생겼을 때 최근 ",
+        "변경과 기존 코드의 연결을 먼저 살펴볼 수 있어 원인을 찾기 쉽다.\u003c/p>\n\u003cp>실행 전에는 'x가 증가하고 y는 그대로여야 한다'처럼 예상 ",
+        "결과를 정한다. 실제 움직임이 그 결과와 일치하면 커밋한다. 메시지에도 '사각 운동의 상단 이동 구현'처럼 확인한 내용을 적으면 개발 과정을 ",
+        "다시 따라가기 좋다.\u003c/p>"
+      ],
+      "prompt": "",
+      "extras": []
+    },
+    {
+      "id": "lec06-image",
+      "type": "content",
+      "navTitle": "캐릭터 출력",
+      "section": "운동 구현",
+      "kicker": "실습 4",
+      "subtitle": "이동 계산 전에 이미지 출력을 확인한다.",
+      "layout": "code",
+      "visual": "800×600 좌표 도식에 중심 (400, 300)과 이미지 중심 피벗을 표시한다. 실제 캐릭터 이미지를 확보하면 함께 표시한다.",
+      "title": "먼저 캐릭터 한 번 출력하기",
+      "body": [
+        "\u003cpre>\u003ccode class=\"language-python\">from pico2d import *\n\nopen_canvas(800, 600)\n",
+        "boy = load_image('character.png')\n\nclear_canvas()\nboy.draw(400, 300)\n",
+        "update_canvas()\ndelay(1)\nclose_canvas()\n\u003c/code>\u003c/pre>"
+      ],
+      "detailHtml": [
+        "\u003cp>이동을 구현하기 전에 이미지가 제대로 표시되는지 확인한다. \u003ccode>open_canvas(800, 600)\u003c/code>으로 창을 열고, ",
+        "\u003ccode>load_image('character.png')\u003c/code>로 읽은 이미지를 \u003ccode>boy\u003c/code>에 담는다.\u003c/p>\n\u003cp>",
+        "\u003ccode>clear_canvas()\u003c/code>로 다음 화면을 그릴 공간인 백버퍼를 지우고, \u003ccode>boy.draw(400, ",
+        "300)\u003c/code>으로 그곳에 이미지를 그린다. 이때 좌표는 이미지의 중심 위치를 뜻한다. 이어 \u003ccode>",
+        "update_canvas()\u003c/code>를 호출하면 그린 내용이 실제 화면에 표시된다.\u003c/p>\n\u003cp>화면을 갱신한 뒤 \u003ccode>",
+        "delay(1)\u003c/code>로 1초 동안 보여 주고 \u003ccode>close_canvas()\u003c/code>로 창을 닫는다. 중앙에 캐릭터가 나타났다가 ",
+        "1초 뒤 창이 닫히면 이 예제는 정상 동작한 것이다.\u003c/p>\n\u003cp>이미지 파일을 찾지 못하면 파일명과 실행 시의 작업 폴더를 확인한다. ",
+        "\u003ccode>character.png\u003c/code>와 같은 상대 경로는 그 작업 폴더를 기준으로 해석된다.\u003c/p>\n\u003cp>다음 이동 실습에서는 ",
+        "캔버스와 이미지를 준비한 뒤 이동 함수를 호출한다. 이 예제의 \u003ccode>close_canvas()\u003c/code>가 이동 전에 실행되지 않도록 ",
+        "코드 순서를 조정한다.\u003c/p>"
+      ],
+      "prompt": "",
+      "extras": [
+        {
+          "title": "확인 및 커밋",
+          "html": "\u003cp>캐릭터가 화면 중앙에 나타나는지 직접 확인한다.\u003c/p>\n\u003cp>AI 요청의 단계 설명: '캐릭터 이미지 로드와 중앙 출력을 확인했어.'\u003c/p>"
+        }
+      ]
+    },
+    {
+      "id": "lec06-circle-math",
+      "type": "content",
+      "navTitle": "원운동 좌표",
+      "section": "운동 구현",
+      "kicker": "좌표 계산",
+      "subtitle": "중심·반지름·각도로 위치를 계산한다.",
+      "layout": "diagram",
+      "visual": "중심 (400,300), 반지름 200의 원과 네 점 (600,300), (400,500), (200,300), (400,100). 오른쪽 x축, 위쪽 y축, 반시계 방향 각도 증가를 표시한다.",
+      "title": "원운동의 좌표 계산",
+      "body": [
+        "\u003cpre>\u003ccode class=\"language-text\">x = 중심 x + 반지름 × cos(theta)\ny = 중심 y + 반지름 × ",
+        "sin(theta)\n\u003c/code>\u003c/pre>\n\u003cpre>\u003ccode class=\"language-python\">theta = ",
+        "math.radians(degree)\nx = 400 + 200 * math.cos(theta)\ny = 300 + 200 * ",
+        "math.sin(theta)\n\u003c/code>\u003c/pre>"
+      ],
+      "detailHtml": [
+        "\u003cp>원 위의 위치는 중심, 반지름, 각도로 정할 수 있다. 반지름이 r일 때 중심을 기준으로 한 x좌표는 \u003ccode>r * ",
+        "cos(theta)\u003c/code>, y좌표는 \u003ccode>r * sin(theta)\u003c/code>다. 각각에 중심의 x좌표와 y좌표를 더하면 화면상의 ",
+        "위치가 된다.\u003c/p>\n\u003cp>예제에서는 중심을 (400, 300), 반지름을 200으로 둔다. 0도에서는 (600, 300), 90도에서는 ",
+        "(400, 500), 180도에서는 (200, 300), 270도에서는 (400, 100)을 지난다. 캔버스의 y좌표는 위로 갈수록 커지므로 ",
+        "각도를 증가시키면 오른쪽에서 출발해 반시계 방향으로 움직인다.\u003c/p>\n\u003cp>\u003ccode>math.cos()\u003c/code>와 \u003ccode>",
+        "math.sin()\u003c/code>은 라디안 단위의 각도를 사용한다. 따라서 도 단위로 정한 \u003ccode>degree\u003c/code>를 \u003ccode>",
+        "math.radians()\u003c/code>로 변환한 뒤 계산한다. 위의 네 위치를 기준으로 좌표와 이동 방향이 맞는지 확인한다.\u003c/p>"
+      ],
+      "prompt": "",
+      "extras": []
+    },
+    {
+      "id": "lec06-circle",
+      "type": "content",
+      "navTitle": "원운동 구현",
+      "section": "운동 구현",
+      "kicker": "실습 5",
+      "subtitle": "좌표 계산·지우기·그리기·화면 갱신·대기를 반복한다.",
+      "layout": "code",
+      "visual": "없음",
+      "title": "원운동 구현과 확인",
+      "body": [
+        "\u003cpre>\u003ccode class=\"language-python\">import math\n\ndef move_circle():\n    for ",
+        "degree in range(360):\n        theta = math.radians(degree)\n        x = 400 + 200 ",
+        "* math.cos(theta)\n        y = 300 + 200 * math.sin(theta)\n\n        ",
+        "clear_canvas()\n        boy.draw(x, y)\n        update_canvas()\n        ",
+        "delay(0.01)\n\u003c/code>\u003c/pre>"
+      ],
+      "detailHtml": [
+        "\u003cp>앞에서 구한 좌표식을 반복문에 넣어 원운동을 만든다. \u003ccode>range(360)\u003c/code>은 0부터 359까지의 각도를 만들며, 매번 ",
+        "각도를 라디안으로 바꿔 x와 y를 계산한다. 360도는 0도와 같은 위치이므로 이 예제에서는 중복해서 그리지 않고 359도에서 함수를 ",
+        "마친다.\u003c/p>\n\u003cp>좌표를 계산한 뒤에는 \u003ccode>clear_canvas()\u003c/code>로 백버퍼를 지우고 \u003ccode>boy.draw(x, ",
+        "y)\u003c/code>로 새 위치에 캐릭터를 그린다. 이어 \u003ccode>update_canvas()\u003c/code>로 화면에 표시하고 \u003ccode>",
+        "delay(0.01)\u003c/code>로 잠깐 기다린다. 매 반복에서 지우기, 그리기, 화면 갱신, 대기를 차례로 수행하면 캐릭터가 움직이는 것으로 ",
+        "보인다.\u003c/p>\n\u003cp>캔버스와 이미지를 준비한 뒤 \u003ccode>move_circle()\u003c/code>을 호출해 앞 장의 네 기준 위치를 차례로 ",
+        "지나는지 확인한다. 함수는 원 경로를 한 번 이동한 뒤 끝나도록 두어, 이후 사각 운동으로 넘어갈 수 있게 한다.\u003c/p>"
+      ],
+      "prompt": "",
+      "extras": [
+        {
+          "title": "확인 및 커밋",
+          "html": "\u003cp>중심과 반지름이 의도한 값인지, 캐릭터가 한 바퀴 도는지 확인한다.\u003c/p>\n\u003cp>AI 요청의 단계 설명: '삼각함수를 이용한 원운동을 구현하고 한 바퀴 이동을 확인했어.'\u003c/p>"
+        }
+      ]
+    },
+    {
+      "id": "lec06-rectangle",
+      "type": "content",
+      "navTitle": "사각 운동 분해",
+      "section": "운동 구현",
+      "kicker": "실습 6",
+      "subtitle": "네 변의 책임을 네 함수로 나눈다.",
+      "layout": "code",
+      "visual": "상단 → 오른쪽 → 하단 → 왼쪽 순서의 사각 경로. 각 변에 함수 이름을 대응시킨다.",
+      "title": "사각 운동을 네 부분으로 나누기",
+      "body": [
+        "\u003cpre>\u003ccode class=\"language-python\">def move_rectangle():\n    move_top()\n    ",
+        "move_right()\n    move_bottom()\n    move_left()\n\u003c/code>\u003c/pre>"
+      ],
+      "detailHtml": [
+        "\u003cp>사각 운동을 상단, 오른쪽, 하단, 왼쪽의 네 구간으로 나눈다. 왼쪽 위에서 출발해 오른쪽, 아래, 왼쪽, 위로 이동하면 사각형을 시계 ",
+        "방향으로 한 바퀴 돌게 된다.\u003c/p>\n\u003cp>먼저 네 함수를 정의하고 각각에 출력문을 넣는다. \u003ccode>move_rectangle()\u003c/code>",
+        "을 호출했을 때 \u003ccode>top\u003c/code>, \u003ccode>right\u003c/code>, \u003ccode>bottom\u003c/code>, \u003ccode>",
+        "left\u003c/code>가 순서대로 출력되는지 확인한다. 전체 운동의 호출 순서를 검사했던 방법을 사각 운동 내부에도 적용하는 것이다.\u003c/p>\n\u003cp>",
+        "\u003ccode>move_rectangle()\u003c/code>은 네 구간의 실행 순서를 맡고, 각 구간 함수는 한 변을 이동하는 일을 맡는다. 이렇게 ",
+        "나누면 이후 상단 이동은 \u003ccode>move_top()\u003c/code>에서 구현하고 확인하는 식으로 작업 범위를 좁힐 수 있다.\u003c/p>"
+      ],
+      "prompt": "",
+      "extras": [
+        {
+          "title": "확인 및 커밋",
+          "html": "\u003cp>네 변이 올바른 순서로 호출되는지 확인한다.\u003c/p>\n\u003cp>AI 요청의 단계 설명: '사각 운동을 네 함수로 나누고 호출 순서를 검증했어.'\u003c/p>"
+        }
+      ]
+    },
+    {
+      "id": "lec06-draw-helper",
+      "type": "content",
+      "navTitle": "공통 그리기 함수",
+      "section": "운동 구현",
+      "kicker": "리팩터링",
+      "subtitle": "좌표 계산과 화면 출력을 분리한다.",
+      "layout": "code",
+      "visual": "없음",
+      "title": "반복되는 그리기 코드를 함수로 만들기",
+      "body": [
+        "\u003cpre>\u003ccode class=\"language-python\">def draw_boy(x, y):\n    clear_canvas()\n    ",
+        "boy.draw(x, y)\n    update_canvas()\n    delay(0.01)\n\u003c/code>\u003c/pre>\n\u003cul>\n\u003cli>이동 함수: ",
+        "좌표 계산\u003c/li>\n\u003cli>그리기 함수: 화면 출력\u003c/li>\n\u003c/ul>"
+      ],
+      "detailHtml": [
+        "\u003cp>원운동과 사각 운동은 좌표를 계산하는 방법이 다르지만, 계산한 위치에 캐릭터를 표시하는 과정은 같다. 백버퍼 지우기, 그리기, 화면 갱신, ",
+        "대기를 \u003ccode>draw_boy(x, y)\u003c/code>로 묶어 공통으로 사용한다.\u003c/p>\n\u003cp>이동 함수는 x와 y를 계산해 넘기고, ",
+        "\u003ccode>draw_boy()\u003c/code>는 그 위치에 이미지를 표시한다. 예를 들어 \u003ccode>draw_boy(400, 300)\u003c/code>은 ",
+        "중앙에, \u003ccode>draw_boy(x, 550)\u003c/code>은 높이 550에서 x가 가리키는 위치에 그린다.\u003c/p>\n\u003cp>먼저 완성한 ",
+        "원운동에서 화면 처리 네 문장을 \u003ccode>draw_boy(x, y)\u003c/code> 호출 한 줄로 교체한다. \u003ccode>",
+        "update_canvas()\u003c/code>도 공통 함수 안에 있으므로 이동 함수에서는 따로 호출하지 않는다. 좌표 계산은 그대로 두고, 실행 ",
+        "결과가 교체 전과 같은지 확인한다.\u003c/p>\n\u003cp>이처럼 동작을 유지하면서 코드 구조를 정리하는 작업을 리팩터링이라고 한다. 이후 사각 운동과 ",
+        "삼각 운동도 이 함수를 사용하면 화면 출력 코드를 반복해서 작성할 필요가 없다.\u003c/p>"
+      ],
+      "prompt": "",
+      "extras": [
+        {
+          "title": "확인 및 커밋",
+          "html": "\u003cp>공통 함수 추출 전후의 원운동 결과를 비교한다.\u003c/p>\n\u003cp>AI 요청의 단계 설명: '그리기 코드를 공통 함수로 추출하고 기존 원운동이 유지되는지 확인했어.'\u003c/p>"
+        }
+      ]
+    },
+    {
+      "id": "lec06-edges",
+      "type": "content",
+      "navTitle": "한 변씩 이동",
+      "section": "운동 구현",
+      "kicker": "실습 7",
+      "subtitle": "고정 좌표와 변하는 좌표를 구분한다.",
+      "layout": "code-table",
+      "visual": "화면 내용의 네 구간 비교표. 전체 크기에서 코드 아래에 배치한다.",
+      "title": "한 변씩 구현하기",
+      "body": [
+        "\u003cpre>\u003ccode class=\"language-python\">def move_top():\n    for x in range(50, 751, ",
+        "5):\n        draw_boy(x, 550)\n\u003c/code>\u003c/pre>\n\u003ctable>\n\u003cthead>\n\u003ctr>\n\u003cth>구간\u003c/th>\n\u003cth>",
+        "고정 좌표\u003c/th>\n\u003cth>변하는 좌표\u003c/th>\n\u003c/tr>\n\u003c/thead>\n\u003ctbody>\n\u003ctr>\n\u003ctd>상단\u003c/td>\n\u003ctd>y\u003c/td>\n",
+        "\u003ctd>x 증가\u003c/td>\n\u003c/tr>\n\u003ctr>\n\u003ctd>오른쪽\u003c/td>\n\u003ctd>x\u003c/td>\n\u003ctd>y 감소\u003c/td>\n\u003c/tr>\n\u003ctr>\n\u003ctd>",
+        "하단\u003c/td>\n\u003ctd>y\u003c/td>\n\u003ctd>x 감소\u003c/td>\n\u003c/tr>\n\u003ctr>\n\u003ctd>왼쪽\u003c/td>\n\u003ctd>x\u003c/td>\n\u003ctd>y 증가\u003c/td>\n",
+        "\u003c/tr>\n\u003c/tbody>\n\u003c/table>"
+      ],
+      "detailHtml": [
+        "\u003cp>상단 이동은 y를 550으로 고정하고 x를 50에서 750까지 늘리면 된다. \u003ccode>range(50, 751, 5)\u003c/code>는 ",
+        "50, 55, 60처럼 5씩 증가하는 값을 만든다. 종료값은 포함하지 않으므로 750까지 이동하도록 751을 적었다.\u003c/p>\n\u003cp>오른쪽 변은 ",
+        "x를 750으로 고정하고 y를 550에서 50까지 줄인다. 하단은 y를 50으로 고정하고 x를 줄이며, 왼쪽 변은 x를 50으로 고정하고 y를 ",
+        "늘린다. 감소하는 구간에는 \u003ccode>range(550, 49, -5)\u003c/code>처럼 음수 간격을 사용한다.\u003c/p>\n\u003cp>한 변을 구현할 ",
+        "때마다 시작점, 이동 방향, 끝점을 확인하고 커밋한다. 다음 변은 이전 변의 끝점에서 시작해야 한다. 이동이 생략되면 \u003ccode>",
+        "range()\u003c/code>의 범위와 간격 부호를, 모서리에서 위치가 튀면 두 변의 연결 좌표를 확인한다.\u003c/p>\n\u003cp>예제는 화면 가장자리에서 ",
+        "50만큼 안쪽을 이동 경로로 잡았다. 좌표는 이미지의 중심이므로, 이미지를 온전히 보이게 하려면 표시 너비와 높이의 절반만큼 여백이 ",
+        "필요하다.\u003c/p>"
+      ],
+      "prompt": "",
+      "extras": [
+        {
+          "title": "확인 및 커밋",
+          "html": "\u003cp>한 변을 구현할 때마다 이동 방향과 끝점을 확인하고 AI로 커밋한다.\u003c/p>\n\u003cp>AI 요청의 단계 설명 예: '사각 운동의 상단 이동을 구현하고 위치와 방향을 확인했어.'\u003c/p>"
+        }
+      ]
+    },
+    {
+      "id": "lec06-fast-test",
+      "type": "content",
+      "navTitle": "빠른 부분 테스트",
+      "section": "운동 구현",
+      "kicker": "테스트",
+      "subtitle": "준비는 유지하고 확인할 동작에 바로 도달한다.",
+      "layout": "code",
+      "visual": "없음",
+      "title": "테스트까지 기다리는 시간 줄이기",
+      "body": [
+        "\u003cul>\n\u003cli>지금 구현하는 함수를 바로 실행한다.\u003c/li>\n\u003cli>검증한 구간은 잠시 건너뛴다.\u003c/li>\n\u003cli>부분 확인 후 전체 흐름을 ",
+        "다시 확인한다.\u003c/li>\n\u003c/ul>\n\u003cpre>\u003ccode class=\"language-python\"># 캔버스와 이미지 준비 후\n",
+        "move_top()\n\u003c/code>\u003c/pre>"
+      ],
+      "detailHtml": [
+        "\u003cp>상단 이동을 수정할 때마다 앞선 원운동이 끝나기를 기다리면 확인에 시간이 걸린다. 이때는 확인하려는 함수를 바로 호출해 수정 결과를 빠르게 ",
+        "살펴본다.\u003c/p>\n\u003cp>캔버스 열기와 이미지 로드는 유지하고, 전체 운동을 실행하던 반복문을 잠시 \u003ccode>move_top()\u003c/code> ",
+        "호출로 대체한다. 무한 반복문 아래에 호출을 추가하면 그 줄까지 실행이 도달하지 않으므로, 실제 실행되는 자리를 바꿔야 한다.\u003c/p>\n\u003cp>",
+        "수정한 구간이 잘 동작하면 원래 반복문을 복구한다. 부분 테스트로 해당 함수의 동작을 확인하고, 전체 실행으로 다른 함수와의 연결을 ",
+        "확인한다.\u003c/p>"
+      ],
+      "prompt": "",
+      "extras": []
+    },
+    {
+      "id": "lec06-triangle",
+      "type": "content",
+      "navTitle": "삼각 운동",
+      "section": "운동 구현",
+      "kicker": "실습 8",
+      "subtitle": "세 꼭짓점 사이를 차례로 이동한다.",
+      "layout": "diagram",
+      "visual": "A=(100,100), B=(700,100), C=(400,500), A → B → C → A. B-C 변의 t=0, 0.5, 1 위치를 표시한다.",
+      "title": "삼각 운동에 같은 방법 적용하기",
+      "body": [
+        "\u003col>\n\u003cli>세 꼭짓점 결정\u003c/li>\n\u003cli>세 변으로 함수 분해\u003c/li>\n\u003cli>호출 순서 확인\u003c/li>\n\u003cli>한 변씩 구현·실행·AI ",
+        "커밋\u003c/li>\n\u003c/ol>"
+      ],
+      "detailHtml": [
+        "\u003cp>사각 운동에서 사용한 방법을 삼각 운동에도 적용한다. 꼭짓점을 A=(100, 100), B=(700, 100), C=(400, 500)으로 ",
+        "잡으면 A → B → C → A의 세 구간으로 나눌 수 있다. 각 구간을 함수로 만들고 호출 순서부터 확인한다.\u003c/p>\n\u003cp>대각선 구간에서는 ",
+        "x와 y를 같은 진행 비율로 바꿔야 한다. 시작점이 (x0, y0), 끝점이 (x1, y1)일 때 진행 비율 t를 0에서 1까지 늘리며 다음 ",
+        "식으로 위치를 계산한다.\u003c/p>\n\u003cpre>\u003ccode class=\"language-python\">x = x0 + (x1 - x0) * t\ny = ",
+        "y0 + (y1 - y0) * t\n\u003c/code>\u003c/pre>\n\u003cp>t가 0이면 시작점, 0.5이면 중간점, 1이면 끝점이다. B에서 C로 이동할 ",
+        "때는 x가 700에서 400으로 줄고 y가 100에서 500으로 늘어난다. 두 좌표에 같은 t를 사용하므로 선분을 따라 움직인다.\u003c/p>\n\u003cp>",
+        "이동을 n개의 간격으로 나누려면 양의 정수 n을 정하고, \u003ccode>for step in range(n + 1):\u003c/code> 안에서 \u003ccode>",
+        "t = step / n\u003c/code>을 계산한다. 그러면 시작점과 끝점을 모두 포함할 수 있다. 계산한 좌표는 \u003ccode>draw_boy(x, ",
+        "y)\u003c/code>에 전달한다.\u003c/p>\n\u003cp>한 변씩 구현하고 끝점에 도달하는지 확인한 뒤 커밋한다. 세 변을 모두 연결하면 A에서 출발해 다시 ",
+        "A로 돌아오는지 확인한다.\u003c/p>"
+      ],
+      "prompt": "",
+      "extras": [
+        {
+          "title": "확인 및 커밋",
+          "html": "\u003cp>각 변이 지정한 꼭짓점까지 이동하고 마지막 변이 시작점으로 돌아오는지 확인한다.\u003c/p>\n\u003cp>AI 요청의 단계 설명 예: '삼각 운동의 첫 번째 변을 구현하고 두 꼭짓점 사이 이동을 확인했어.'\u003c/p>"
+        }
+      ]
+    },
+    {
+      "id": "lec06-integration",
+      "type": "content",
+      "navTitle": "전체 반복 연결",
+      "section": "운동 구현",
+      "kicker": "통합 확인",
+      "subtitle": "부분 테스트 이후 전체 흐름을 확인한다.",
+      "layout": "code",
+      "visual": "없음",
+      "title": "전체 운동을 연결하기",
+      "body": [
+        "\u003cpre>\u003ccode class=\"language-python\">while True:\n    move_circle()\n    ",
+        "move_rectangle()\n    move_triangle()\n\u003c/code>\u003c/pre>\n\u003cul>\n\u003cli>개발용 임시 중단 제거\u003c/li>\n",
+        "\u003cli>세 운동의 순서 확인\u003c/li>\n\u003cli>전체 반복 확인\u003c/li>\n\u003c/ul>"
+      ],
+      "detailHtml": [
+        "\u003cp>각 운동을 개별적으로 확인했으면 전체 반복문을 실행한다. 원운동, 사각 운동, 삼각 운동을 차례로 호출하고, 삼각 운동이 끝나면 다시 ",
+        "원운동부터 시작한다.\u003c/p>\n\u003cp>모듈 가져오기와 함수 정의를 먼저 두고, 캔버스와 이미지를 준비한 다음 반복문을 실행한다. 부분 테스트용 ",
+        "호출과 임시 \u003ccode>break\u003c/code>는 정리한다.\u003c/p>\n\u003cp>각 운동 함수는 자신의 경로를 한 번 이동한 뒤 끝나야 다음 함수가 ",
+        "실행된다. 특정 운동에서 넘어가지 않으면 그 함수 안의 반복 조건을 확인한다. 전체 순환을 두 번 이상 관찰해 원 → 사각 → 삼각 → 원의 ",
+        "연결을 확인한다.\u003c/p>\n\u003cp>이 예제에는 종료 입력 처리가 없으므로 확인을 마치면 IDE에서 실행을 중단한다. 무한 반복문 뒤에 둔 \u003ccode>",
+        "close_canvas()\u003c/code>는 반복문을 빠져나오기 전에는 실행되지 않는다.\u003c/p>"
+      ],
+      "prompt": "",
+      "extras": [
+        {
+          "title": "확인 및 커밋",
+          "html": "\u003cp>전체 순환을 두 번 이상 관찰하고, 세 운동이 모두 실행되는지 확인한다.\u003c/p>\n\u003cp>AI 요청의 단계 설명: '세 운동의 전체 반복을 연결하고 두 번 이상 실행해 확인했어.'\u003c/p>"
+        }
+      ]
+    },
+    {
+      "id": "lec06-assignment-complete",
+      "type": "content",
+      "navTitle": "과제 완료",
+      "section": "업로드와 제출",
+      "kicker": "완료 점검",
+      "subtitle": "마지막 수정까지 커밋한 뒤 push한다.",
+      "layout": "flow",
+      "visual": "실행 확인 → 마지막 변경 AI 커밋 → AI push → GitHub 확인.",
+      "title": "과제 하나를 완료했을 때",
+      "body": [
+        "\u003cp>실행 확인 → 마지막 변경 AI 커밋 → AI push → GitHub 확인\u003c/p>\n\u003cul>\n\u003cli>과제 요구사항 충족\u003c/li>\n\u003cli>",
+        "관련 변경의 커밋 완료\u003c/li>\n\u003cli>본인 저장소로 업로드\u003c/li>\n\u003c/ul>"
+      ],
+      "detailHtml": [
+        "\u003cp>교수자가 지정한 과제 단위의 요구사항을 모두 구현했으면 전체 실행 결과를 확인한다. 한 구간이 동작하는 것과 과제 전체가 완성된 것을 ",
+        "구분하고, 요구한 기능이 빠짐없이 실행되는지 살핀다.\u003c/p>\n\u003cp>확인 중 수정한 내용까지 저장하고 커밋한 뒤 push한다. push는 커밋을 ",
+        "전달하므로, 아직 커밋하지 않은 코드나 이미지 파일은 함께 올라가지 않는다. 실행에 필요한 파일이 모두 커밋에 포함됐는지 확인한다.\u003c/p>\n\u003cp>",
+        "GitHub에서 업로드 결과를 확인한 뒤 다음 과제를 진행한다. 앞서 완료한 과제 파일도 유지해 최종 제출 버전에 모든 결과가 남도록 ",
+        "한다.\u003c/p>"
+      ],
+      "prompt": "",
+      "extras": []
+    },
+    {
+      "id": "lec06-ai-push",
+      "type": "content",
+      "navTitle": "AI push",
+      "section": "업로드와 제출",
+      "kicker": "원격 업로드",
+      "subtitle": "현재 브랜치의 커밋을 본인 origin에 전달한다.",
+      "layout": "prompt",
+      "visual": "없음",
+      "title": "AI에게 push 요청하기",
+      "body": [
+        "\u003cul>\n\u003cli>목적지: 본인의 GitHub 저장소\u003c/li>\n\u003cli>origin 주소 확인\u003c/li>\n\u003cli>실제 작업 브랜치 확인\u003c/li>\n",
+        "\u003cli>원격 반영 결과 확인\u003c/li>\n\u003c/ul>"
+      ],
+      "detailHtml": [
+        "\u003cp>AI에게 push를 요청할 때는 업로드할 저장소와 브랜치를 확인하도록 한다. 이번 실습에서는 \u003ccode>origin\u003c/code>이 본인의 ",
+        "GitHub fork 저장소를 가리켜야 한다. 교수자 원본 저장소인 \u003ccode>upstream\u003c/code>과 구분한다.\u003c/p>\n\u003cp>현재 작업 ",
+        "브랜치에 만든 커밋을 올려야 하므로, 브랜치 이름을 임의로 정하지 않고 실제 작업 상태를 확인하게 한다. 과제 관련 미커밋 변경이 남아 있으면 ",
+        "먼저 기록을 마친 뒤 push한다.\u003c/p>\n\u003cp>완료 후에는 저장소 주소, 브랜치, 업로드된 커밋 해시와 URL을 받는다. 오류가 나면 오류 ",
+        "메시지를 바탕으로 원인을 해결하고 다시 확인한다. 이 결과를 다음 단계의 GitHub 화면과 비교한다.\u003c/p>"
+      ],
+      "prompt": "\u003cpre>\u003ccode class=\"language-text\">이번 과제를 직접 실행해 확인했고 관련 변경을 커밋했어.\norigin이 내 GitHub fork 저장소인지와 현재 작업 브랜치를 확인해 줘.\n과제 관련 미커밋 변경이 있으면 먼저 알려줘.\n커밋이 완료된 상태라면 현재 브랜치를 origin에 push해 줘.\n완료 후 원격 저장소 주소, 브랜치, push 결과,\n원격에 반영된 최신 커밋 해시와 URL을 알려줘.\n\u003c/code>\u003c/pre>",
+      "extras": []
+    },
+    {
+      "id": "lec06-remote-check",
+      "type": "content",
+      "navTitle": "GitHub 확인",
+      "section": "업로드와 제출",
+      "kicker": "결과 검증",
+      "subtitle": "주소·브랜치·커밋·파일 내용을 직접 확인한다.",
+      "layout": "bullets",
+      "visual": "없음",
+      "title": "GitHub에서 과제 완료 확인하기",
+      "body": [
+        "\u003cul>\n\u003cli>저장소 소유자가 본인인가?\u003c/li>\n\u003cli>올린 브랜치가 맞는가?\u003c/li>\n\u003cli>최근 커밋 메시지가 보이는가?\u003c/li>\n\u003cli>",
+        "과제 파일 내용이 최신인가?\u003c/li>\n\u003c/ul>"
+      ],
+      "detailHtml": [
+        "\u003cp>본인 GitHub 저장소를 열고, AI가 push한 브랜치를 선택한다. 다른 브랜치를 보고 있으면 방금 올린 변경이 보이지 않을 수 ",
+        "있으므로 저장소 주소와 브랜치를 먼저 확인한다.\u003c/p>\n\u003cp>최근 커밋의 메시지와 해시를 AI가 알려 준 결과와 비교한다. 이어 과제 소스 ",
+        "파일을 열어 마지막 수정이 들어 있는지, 실행에 필요한 이미지 등도 함께 올라왔는지 살핀다.\u003c/p>\n\u003cp>여기서는 내 PC에서 확인한 결과가 ",
+        "GitHub에도 반영됐는지를 검사한다. AI의 작업 결과와 실제 파일이 일치하면 해당 과제의 업로드가 완료된 것이다.\u003c/p>"
+      ],
+      "prompt": "",
+      "extras": []
+    },
+    {
+      "id": "lec06-final-check",
+      "type": "content",
+      "navTitle": "최종 점검",
+      "section": "업로드와 제출",
+      "kicker": "제출 준비",
+      "subtitle": "모든 과제가 포함된 최종 원격 커밋을 확인한다.",
+      "layout": "prompt",
+      "visual": "없음",
+      "title": "모든 과제 완료 후 최종 점검",
+      "body": [
+        "\u003cul>\n\u003cli>모든 과제가 구현되어 있다.\u003c/li>\n\u003cli>마지막 수정까지 커밋되어 있다.\u003c/li>\n\u003cli>모든 커밋이 본인 저장소에 ",
+        "push되어 있다.\u003c/li>\n\u003cli>제출할 최종 커밋을 확인했다.\u003c/li>\n\u003c/ul>"
+      ],
+      "detailHtml": [
+        "\u003cp>제출 전에 모든 과제의 마지막 수정까지 반영됐는지 점검한다. AI에게 과제 관련 미커밋 변경, 새로 만든 파일, 아직 push하지 않은 ",
+        "커밋을 확인하도록 요청한다. 남은 작업이 있으면 실행 확인과 커밋, push를 마친다.\u003c/p>\n\u003cp>그다음 로컬 작업 브랜치와 GitHub의 ",
+        "제출할 브랜치가 같은 최신 커밋을 가리키는지 확인한다. 그 커밋 시점의 전체 파일 목록을 보고 모든 과제와 실행에 필요한 자료가 포함됐는지도 ",
+        "확인한다.\u003c/p>\n\u003cp>커밋 화면의 변경 목록은 그때 수정한 파일만 보여 준다. 이전에 완성한 과제는 마지막 변경 목록에 없어도 해당 버전의 ",
+        "저장소에 포함될 수 있다. 전체 결과가 확인되면 그 커밋의 해시와 URL을 제출 버전으로 정한다.\u003c/p>"
+      ],
+      "prompt": "\u003cpre>\u003ccode class=\"language-text\">이번 수업의 모든 과제를 완료했어.\n현재 브랜치에서 과제 관련 미커밋 변경과\norigin에 아직 push하지 않은 커밋이 있는지 확인해 줘.\n모두 반영되었다면 로컬 최신 커밋과 원격 최신 커밋이 일치하는지 확인하고,\n내 GitHub 저장소의 최종 커밋 전체 해시와 해당 커밋 URL을 알려줘.\n미완료 항목이 있으면 구체적으로 알려줘.\n\u003c/code>\u003c/pre>",
+      "extras": []
+    },
+    {
+      "id": "lec06-commit-url",
+      "type": "content",
+      "navTitle": "최종 커밋 URL",
+      "section": "업로드와 제출",
+      "kicker": "버전 식별",
+      "subtitle": "제출할 버전을 고정된 주소로 전달한다.",
+      "layout": "code",
+      "visual": "URL 예시의 계정, 저장소, commit, 전체 해시를 각각 구분해 표시한다. 실제 계정이나 해시를 만들어 넣지 않는다.",
+      "title": "제출할 URL의 형태",
+      "body": [
+        "\u003cpre>\u003ccode class=\"language-text\">https://github.com/본인계정/저장소명/commit/전체커밋해시\n",
+        "\u003c/code>\u003c/pre>\n\u003cul>\n\u003cli>본인 저장소의 커밋 상세 주소\u003c/li>\n\u003cli>모든 과제를 마친 마지막 커밋\u003c/li>\n\u003cli>주소를 ",
+        "열어 해시와 내용 확인\u003c/li>\n\u003c/ul>"
+      ],
+      "detailHtml": [
+        "\u003cp>커밋 URL은 특정 커밋과 그 시점의 저장소 상태를 가리킨다. 저장소나 브랜치의 주소는 이후 커밋이 추가되면 표시되는 내용이 달라질 수 ",
+        "있지만, 커밋 URL은 제출한 버전을 특정할 수 있다.\u003c/p>\n\u003cp>화면의 주소는 형식을 보여 주는 예시다. 실제 제출에는 AI가 확인한 본인 ",
+        "저장소의 커밋 URL을 사용한다. 주소를 직접 열어 계정, 저장소, 커밋 해시가 최종 점검 결과와 일치하는지 확인한다.\u003c/p>\n\u003cp>제출 후 ",
+        "수정한 코드는 기존 커밋 URL에 자동으로 반영되지 않는다. 수정본을 제출하려면 새 변경을 커밋하고 push한 뒤, 과목의 재제출 안내에 따라 ",
+        "URL도 새 커밋 주소로 바꾼다.\u003c/p>"
+      ],
+      "prompt": "",
+      "extras": []
+    },
+    {
+      "id": "lec06-eclass",
+      "type": "content",
+      "navTitle": "e-class 제출",
+      "section": "업로드와 제출",
+      "kicker": "최종 제출",
+      "subtitle": "제출된 링크와 완료 상태까지 확인한다.",
+      "layout": "steps",
+      "visual": "e-class 과목 선택 → 과제 선택 → URL 입력 → 제출 완료 확인의 절차 도식. 실제 화면을 확보하지 않았으므로 UI 캡처처럼 꾸미지 않는다.",
+      "title": "e-class에 제출하기",
+      "body": [
+        "\u003col>\n\u003cli>학교 e-class의 해당 과목 접속\u003c/li>\n\u003cli>해당 과제 제출 화면 열기\u003c/li>\n\u003cli>최종 커밋 URL 입력\u003c/li>\n",
+        "\u003cli>제출 완료 여부 확인\u003c/li>\n\u003c/ol>"
+      ],
+      "detailHtml": [
+        "\u003cp>e-class에서 해당 과목과 과제를 선택하고 최종 커밋 URL을 입력한다. 학번과 이름 등 추가 정보는 실제 제출 양식에서 요구하는 ",
+        "항목에 맞춰 작성한다.\u003c/p>\n\u003cp>GitHub에 push하는 것과 e-class에 제출하는 것은 별도 절차다. URL을 입력한 뒤 화면의 ",
+        "안내에 따라 제출을 완료하고, 제출 완료 상태까지 확인한다.\u003c/p>\n\u003cp>제출된 링크를 다시 열어 본인 저장소의 최종 커밋이 나오는지 확인한다. ",
+        "교수자가 자료를 확인할 수 있도록 저장소의 공개 범위나 접근 권한도 과목 안내에 맞춘다.\u003c/p>"
+      ],
+      "prompt": "",
+      "extras": [
+        {
+          "title": "제출 예시",
+          "html": "\u003cpre>\u003ccode class=\"language-text\">학번: 본인 학번\n이름: 본인 이름\n최종 커밋 URL: AI가 확인해 준 실제 GitHub 커밋 URL\n\u003c/code>\u003c/pre>\n\u003cp>학번과 이름의 별도 입력 여부는 e-class 제출 양식을 따른다.\u003c/p>"
+        }
+      ]
+    },
+    {
+      "id": "lec06-recap",
+      "type": "content",
+      "navTitle": "개발 습관 정리",
+      "section": "마무리",
+      "kicker": "복습",
+      "subtitle": "구현·검증·기록·업로드·제출을 반복한다.",
+      "layout": "bullets",
+      "visual": "없음",
+      "title": "오늘의 개발 습관",
+      "body": [
+        "\u003cul>\n\u003cli>큰 구조부터 만들고 함수로 나눈다.\u003c/li>\n\u003cli>작은 수정마다 직접 실행한다.\u003c/li>\n\u003cli>검증한 진전은 AI로 ",
+        "커밋한다.\u003c/li>\n\u003cli>과제 완료마다 AI로 push한다.\u003c/li>\n\u003cli>마지막 커밋 URL을 e-class에 제출한다.\u003c/li>\n\u003c/ul>"
+      ],
+      "detailHtml": [
+        "\u003cp>이번 실습에서는 전체 반복 구조를 먼저 만들고, 함수 이름으로 실행 순서를 표현한 뒤 출력문으로 흐름을 확인했다. 이어 원운동을 구현하고, ",
+        "사각 운동을 나누는 과정에서 공통 그리기 함수를 추출했다. 같은 방법으로 삼각 운동을 완성한 뒤 전체 순환을 확인했다.\u003c/p>\n\u003cp>앞으로도 ",
+        "확인할 수 있는 작은 단위로 구현하고, 실행 결과를 확인한 지점을 커밋으로 남긴다. 과제 완료 때는 push한 결과를 직접 확인하고, 모든 ",
+        "과제를 마치면 최종 커밋 URL을 제출한다.\u003c/p>\n\u003cp>복습할 때는 코드와 커밋 이력을 함께 보며 각 단계에서 무엇을 추가하고 확인했는지 ",
+        "되짚어 본다. AI가 Git 작업을 도와주더라도 실행 결과와 제출 내용을 판단하는 일은 직접 해야 한다.\u003c/p>"
+      ],
+      "prompt": "",
+      "extras": []
+    }
+  ]
+}</script>
+<script>
+const deck=JSON.parse(document.getElementById('deck-data').textContent);
+const $=id=>document.getElementById(id), escapeText=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const htmlText=value=>Array.isArray(value)?value.join(''):(value||'');
+let index=0;const opened=new Set();
+function flow(labels){return '<div class="lec-flow">'+labels.map((l,i)=>(i?'<span aria-hidden="true">→</span>':'')+'<b>'+escapeText(l)+'</b>').join('')+'</div>'}
+function diagram(kind){
+ const begin='<div class="visual"><svg viewBox="0 0 800 430" role="img" aria-label="'+({circle:'원운동의 중심과 네 기준 좌표',triangle:'삼각 운동의 꼭짓점과 진행 비율',rectangle:'사각 운동의 함수별 이동 방향',image:'800 곱하기 600 캔버스의 중심 위치'}[kind])+'"><defs><marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10Z" fill="#16806f"/></marker></defs>';
+ let body='';
+ if(kind==='circle')body='<path d="M100 350H740M160 390V35" stroke="#c1cbd3" fill="none"/><text x="740" y="375">x</text><text x="140" y="35">y</text><circle cx="400" cy="215" r="135" fill="none" stroke="#1767a8" stroke-width="3"/><path d="M400 215H535M523 156L510 132" stroke="#16806f" stroke-width="3" marker-end="url(#arrow)"/><circle cx="400" cy="215" r="5" fill="#16806f"/><text x="410" y="242">중심 (400, 300)</text><text x="425" y="204">r = 200</text><text x="545" y="219">0° (600, 300)</text><text x="328" y="58">90° (400, 500)</text><text x="75" y="219">180° (200, 300)</text><text x="320" y="380">270° (400, 100)</text>';
+ if(kind==='triangle')body='<path d="M145 330H655L400 70Z" stroke="#1767a8" stroke-width="3" fill="#eaf3f7"/><path d="M290 330H430M570 243L508 180M294 178L237 236" stroke="#16806f" stroke-width="3" marker-end="url(#arrow)"/><circle cx="528" cy="200" r="6" fill="#b47918"/><text x="78" y="368">A (100, 100)</text><text x="582" y="368">B (700, 100)</text><text x="335" y="48">C (400, 500)</text><text x="550" y="200">t = 0.5</text><text x="655" y="310">t = 0</text><text x="430" y="88">t = 1</text>';
+ if(kind==='rectangle')body='<rect x="155" y="85" width="490" height="245" fill="#eaf3f7" stroke="#1767a8" stroke-width="3"/><path d="M275 85H485M645 150V250M510 330H315M155 260V160" stroke="#16806f" stroke-width="4" fill="none" marker-end="url(#arrow)"/><text x="355" y="62">move_top()</text><text x="655" y="215">move_right()</text><text x="330" y="365">move_bottom()</text><text x="24" y="215">move_left()</text>';
+ if(kind==='image')body='<rect x="145" y="45" width="510" height="330" fill="#eaf3f7" stroke="#1767a8" stroke-width="2"/><path d="M145 210H655M400 45V375" stroke="#c1cbd3" stroke-dasharray="5 5"/><circle cx="400" cy="210" r="7" fill="#16806f"/><text x="415" y="202">이미지 중심 (400, 300)</text><text x="145" y="405">(0, 0)</text><text x="570" y="405">x → 800</text><text x="62" y="54">y ↑ 600</text>';
+ return begin+body+'</svg></div>';
+}
+function visual(s){switch(s.id){case 'lec06-workspace':return flow(['교수자 저장소','본인 fork','학생 PC']);case 'lec06-workflow':return flow(['구현','실행 확인','AI 커밋'])+flow(['과제 완료','AI push','원격 확인'])+flow(['전체 완료','최종 URL','e-class']);case 'lec06-requirements':return flow(['원운동','사각 운동','삼각 운동','다시 반복']);case 'lec06-incremental':return flow(['작은 수정','실행','확인','AI 커밋']);case 'lec06-image':return diagram('image');case 'lec06-circle-math':return diagram('circle');case 'lec06-rectangle':return diagram('rectangle');case 'lec06-triangle':return diagram('triangle');case 'lec06-trace':return '<pre class="console">circle\nrectangle\ntriangle</pre>';default:return ''}}
+const functionDocs={
+'open_canvas':['캔버스 열기','지정한 너비와 높이로 게임 화면을 준비합니다.','open_canvas(800, 600)'],
+'load_image':['이미지 읽기','실행 작업 폴더를 기준으로 이미지 파일을 읽습니다.','boy = load_image("character.png")'],
+'clear_canvas':['백버퍼 지우기','다음 화면을 그릴 백버퍼를 지웁니다. 이 호출만으로 실제 화면이 갱신되지는 않습니다.','clear_canvas()'],
+'draw':['이미지 그리기','이미지 중심을 지정 좌표에 맞춰 백버퍼에 그립니다. 그린 내용은 update_canvas()를 호출하면 화면에 표시됩니다.','boy.draw(x, y)'],
+'update_canvas':['화면 갱신','백버퍼에 그린 내용을 실제 화면에 표시합니다. 한 화면의 그리기를 마친 뒤, 대기하기 전에 호출합니다.','update_canvas()'],
+'delay':['잠시 기다리기','인자로 전달한 초만큼 실행을 기다립니다.','delay(0.01)'],
+'close_canvas':['캔버스 닫기','사용 중인 게임 화면을 닫습니다.','close_canvas()'],
+'range':['반복 범위','시작값부터 종료값 직전까지 간격에 따라 정수를 만듭니다.','range(50, 751, 5)'],
+'radians':['라디안 변환','도 단위 각도를 삼각함수에서 사용하는 라디안으로 변환합니다.','math.radians(degree)'],
+'cos':['코사인','라디안 각도의 코사인을 계산합니다. 원의 x좌표 계산에 사용합니다.','math.cos(theta)'],
+'sin':['사인','라디안 각도의 사인을 계산합니다. 원의 y좌표 계산에 사용합니다.','math.sin(theta)'],
+'draw_boy':['공통 그리기','백버퍼 지우기, 캐릭터 그리기, 화면 갱신, 대기를 묶은 실습용 함수입니다.','draw_boy(x, y)']
+};
+function highlightFunctions(){document.querySelectorAll('.slide-body pre code.language-python').forEach(code=>{
+const text=code.textContent;code.innerHTML=escapeText(text).replace(/\b(open_canvas|load_image|clear_canvas|draw|update_canvas|delay|close_canvas|range|radians|cos|sin|draw_boy)(?=\()/g,'<button class="fn" data-fn="$1">$1</button>');
+})}
+function render(){
+const s=deck.slides[index],cover=s.type==='title',hasDetail=!!htmlText(s.detailHtml);document.body.classList.toggle('cover-mode',cover);
+let content=htmlText(s.body);
+const media=visual(s), grouped=media.includes('class="visual"');
+const main=grouped?'<div class="grid"><div class="content">'+content+'</div>'+media+'</div>':'<div class="content">'+content+'</div>'+media;
+$('stage').innerHTML=cover?'<article class="slide active cover-slide"><div class="cover"><h1>'+escapeText(deck.title)+'</h1><div class="date">'+escapeText(deck.date)+'</div><div class="presenter">'+escapeText(deck.presenter)+'</div></div></article>':
+'<article class="slide active"><div class="slide-head"><div class="kicker"><span class="pill">'+escapeText(s.section)+'</span> '+escapeText(s.kicker)+'</div><h1>'+escapeText(s.title)+'</h1><div class="subtitle">'+escapeText(s.subtitle)+'</div></div><div class="slide-body">'+main+(s.prompt?'<section class="prompt" aria-label="AI 요청문"><button class="copy">요청문 복사</button>'+htmlText(s.prompt)+'</section>':'')+s.extras.map(e=>'<section class="extras"><h2>'+escapeText(e.title)+'</h2>'+htmlText(e.html)+'</section>').join('')+(hasDetail?'<details class="detail" id="detail" '+(opened.has(index)?'open':'')+'><summary>상세 설명 열기</summary><div class="detail-text">'+htmlText(s.detailHtml)+'</div></details>':'')+'</div></article>';
+$('slide-title').textContent=s.navTitle;$('count').textContent=(index+1)+' / '+deck.slides.length;$('page').textContent='← / → 로 슬라이드 이동, D 로 상세 설명 열기/닫기';
+$('bar').style.width=((index+1)/deck.slides.length*100)+'%';$('prev').disabled=index===0;$('next').disabled=index===deck.slides.length-1;$('detail-button').hidden=cover||!hasDetail;$('detail-button').setAttribute('aria-expanded',String(opened.has(index)));
+document.querySelectorAll('#toc button').forEach((b,i)=>{b.setAttribute('aria-current',String(i===index));b.classList.toggle('active',i===index)});
+const detail=$('detail'),slideIndex=index;if(detail)detail.addEventListener('toggle',()=>{if(!detail.isConnected)return;detail.open?opened.add(slideIndex):opened.delete(slideIndex);$('detail-button').setAttribute('aria-expanded',String(detail.open))});
+const copy=document.querySelector('.copy');if(copy)copy.onclick=async()=>{try{await navigator.clipboard.writeText(document.querySelector('.prompt pre').innerText);announce('요청문을 복사했습니다.')}catch{announce('요청문을 선택하여 복사해 주세요.')}};
+highlightFunctions();
+}
+function announce(msg){$('status').textContent=msg;setTimeout(()=>$('status').textContent='',3000)}
+function go(n){index=Math.max(0,Math.min(deck.slides.length-1,n));render()}
+function detailToggle(){const d=$('detail');if(!d)return;d.open=!d.open;if(d.open){opened.add(index);d.scrollIntoView({block:'start',inline:'nearest'})}else opened.delete(index)}
+function syncFullscreen(){const active=!!document.fullscreenElement;document.body.classList.toggle('fullscreen-mode',active);$('fullscreen').textContent=active?'전체 화면 종료':'전체 화면'}
+async function fullscreen(){try{document.fullscreenElement?await document.exitFullscreen():await document.documentElement.requestFullscreen();syncFullscreen()}catch{announce('이 브라우저에서는 전체 화면을 사용할 수 없습니다.')}}
+deck.slides.forEach((s,i)=>{const b=document.createElement('button');b.textContent=(i+1)+'. '+s.navTitle;b.onclick=()=>go(i);$('toc').append(b)});
+$('prev').onclick=()=>go(index-1);$('next').onclick=()=>go(index+1);$('detail-button').onclick=detailToggle;$('fullscreen').onclick=fullscreen;
+document.addEventListener('click',e=>{const b=e.target.closest('[data-fn]');if(!b)return;const d=functionDocs[b.dataset.fn];$('func-card').innerHTML='<h3>'+d[0]+'</h3><p>'+d[1]+'</p><span class="sample">'+escapeText(d[2])+'</span>'});
+document.addEventListener('fullscreenchange',syncFullscreen);
+document.addEventListener('keydown',e=>{if(e.isComposing||e.ctrlKey||e.metaKey||e.altKey||e.target.closest('input,textarea,select,[contenteditable="true"]'))return;if(e.key==='ArrowRight'){e.preventDefault();go(index+1)}if(e.key==='ArrowLeft'){e.preventDefault();go(index-1)}if(e.key.toLowerCase()==='d'&&!document.fullscreenElement){e.preventDefault();detailToggle()}if(e.key.toLowerCase()==='f'){e.preventDefault();fullscreen()}});render();
+</script></body></html>
