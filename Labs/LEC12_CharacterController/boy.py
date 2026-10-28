@@ -9,7 +9,7 @@ class AutoRun:
     DURATION = 5.0
     SPEED = 300
     SIZE = 140
-    Y_OFFSET = 20
+    Y_OFFSET = 15
 
     def __init__(self):
         self.elapsed_time = 0.0
@@ -170,9 +170,7 @@ class Boy:
         self.auto_run.exit(self)
 
     def draw(self):
-        if self.state in ('WALK'):
-            source_y = 100 if self.face_dir == 1 else 0
-        if self.state in ('AUTORUN'):
+        if self.state in ('WALK', 'AUTORUN'):
             source_y = 100 if self.face_dir == 1 else 0
         else:
             source_y = 300 if self.face_dir == 1 else 200
