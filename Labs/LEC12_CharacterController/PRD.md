@@ -224,3 +224,41 @@ stateDiagram-v2
 - 실제 스프라이트 시트에 별도 달리기 행이 있으면 해당 행을 우선 사용한다.
 - 별도 달리기 행이 없으면 기존 걷기 프레임을 더 빠른 속도로 재생해 자동 달리기 애니메이션으로 사용한다.
 - `a` 키의 키 코드는 프로젝트에서 사용하는 `pico2d` 상수 또는 기존 키 코드 처리 방식에 맞춰 구현한다.
+
+## 13. 커밋 기반 개발 계획
+
+구현은 한 번에 큰 변경을 넣지 않고, 기능을 검토·검증하기 쉬운 약 15개의
+독립적인 커밋으로 진행한다. 각 커밋은 하나의 목적만 포함하고, 앞선 커밋이
+정상적으로 동작하는 상태에서 다음 커밋을 적용한다. 커밋 메시지는 아래 제목을
+기준으로 작성한다.
+
+| 순서 | 커밋 제목 | 주요 변경 | 완료 검증 |
+|---:|---|---|---|
+| 1 | `docs: define autorun requirements` | 현재 PRD와 기능 범위 확정 | 요구사항·수용 기준 검토 |
+| 2 | `refactor: define character movement constants` | 기본 속도, 크기, 화면 경계 상수 정리 | 기존 `IDLE`/`WALK` 동작 유지 |
+| 3 | `refactor: extract input key handling` | 키 입력 및 키 해제 처리를 명확히 분리 | 좌우 이동/해제 회귀 확인 |
+| 4 | `feat: add autorun state shell` | 상태 머신에 `AUTORUN` 상태와 기본 전이 추가 | `IDLE → AUTORUN` 상태 전이 확인 |
+| 5 | `feat: add AutoRun state class` | `AutoRun` 상태 클래스와 진입·갱신·종료 인터페이스 추가 | 클래스 단위 생성·호출 확인 |
+| 6 | `feat: initialize autorun timer` | 자동 달리기 진입 시 타이머 초기화 | 진입 직후 경과 시간 `0` 확인 |
+| 7 | `feat: implement autorun movement` | 입력 없이 현재 방향으로 자동 이동 | 프레임 갱신마다 위치 증가 확인 |
+| 8 | `feat: increase autorun speed` | 일반 걷기와 분리된 고속 이동 적용 | `AUTORUN_SPEED > WALK_SPEED` 확인 |
+| 9 | `feat: scale autorun character` | 자동 달리기 전용 확대 크기 적용 | `AUTORUN_SIZE > NORMAL_SIZE` 확인 |
+| 10 | `feat: bounce autorun at screen edges` | 확대 크기를 고려한 좌우 경계 반전 | 양쪽 끝에서 방향 반전 확인 |
+| 11 | `feat: expire autorun after duration` | 5초 이상 경과 시 `IDLE` 복귀 | 5초 전 유지·5초 후 종료 확인 |
+| 12 | `feat: cancel autorun on direction input` | 자동 달리기 중 방향키 입력 시 `WALK` 전환 | 입력 방향 이동 및 자동 이동 취소 확인 |
+| 13 | `fix: restore normal character presentation` | 종료 시 기본 크기·속도·타이머 복원 | `IDLE`/`WALK` 표시 회귀 확인 |
+| 14 | `test: cover autorun transitions` | 상태, 타이머, 속도, 크기, 경계 테스트 추가 | 자동 달리기 단위 테스트 통과 |
+| 15 | `docs: update state diagram and usage` | 최종 상태 다이어그램·조작법·검증 결과 반영 | 문서와 실제 전이 일치 확인 |
+
+### 커밋 운영 규칙
+
+- 각 커밋은 하나의 논리적 변경만 포함하며, 서로 무관한 포맷 변경이나
+  임시 디버깅 코드를 포함하지 않는다.
+- 각 커밋 후 최소한 변경 파일의 문법 검사와 관련 단위 테스트를 실행한다.
+- 실패한 커밋은 다음 기능을 쌓기 전에 수정하며, 동작하지 않는 중간 상태를
+  다음 단계의 기준으로 삼지 않는다.
+- 커밋 순서는 기능 의존성을 반영한다. 특히 `AutoRun` 상태 클래스는 상태
+  머신의 상태 셸이 준비된 후 추가하고, 경계·종료·입력 취소는 자동 이동이
+  동작한 뒤 구현한다.
+- 실제 저장소 커밋을 생성할 때는 각 행의 제목을 사용하고, 최종 통합 전에
+  전체 수용 기준과 회귀 테스트를 다시 실행한다.
