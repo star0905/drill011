@@ -9,6 +9,7 @@ class AutoRun:
     DURATION = 5.0
     SPEED = 300
     SIZE = 140
+    Y_OFFSET = 20
 
     def __init__(self):
         self.elapsed_time = 0.0
@@ -76,6 +77,13 @@ class Boy:
             after='reset_idle_time',
         )
         self.machine.add_transition(
+            trigger='cancel_auto_run',
+            source='AUTORUN',
+            dest='WALK',
+            before='exit_auto_run',
+            after='reset_idle_time',
+        )
+        self.machine.add_transition(
             trigger='start_walking',
             source='IDLE',
             dest='WALK',
@@ -123,6 +131,11 @@ class Boy:
             if key == SDLK_SPACE:
                 self.wake_up()
             return
+        if self.state == 'AUTORUN' and key in (SDLK_LEFT, SDLK_RIGHT):
+            self.pressed_keys.add(key)
+            self.face_dir = -1 if key == SDLK_LEFT else 1
+            self.cancel_auto_run()
+            return
         if key == SDLK_a and self.state == 'IDLE':
             self.start_auto_run()
             return
@@ -164,8 +177,13 @@ class Boy:
         else:
             source_y = 300 if self.face_dir == 1 else 200
         angle = self.SLEEP_ANGLE if self.state == 'SLEEP' else 0
-        draw_y = self.SLEEP_Y if self.state == 'SLEEP' else self.y
         draw_size = self.auto_run.SIZE if self.state == 'AUTORUN' else self.SPRITE_WIDTH
+        if self.state == 'SLEEP':
+            draw_y = self.SLEEP_Y
+        elif self.state == 'AUTORUN':
+            draw_y = self.y + self.auto_run.Y_OFFSET
+        else:
+            draw_y = self.y
         self.image.clip_composite_draw(
             self.frame * 100,
             source_y,
