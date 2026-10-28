@@ -7,6 +7,8 @@ from transitions import Machine
 
 class AutoRun:
     DURATION = 5.0
+    SPEED = 300
+    SIZE = 140
 
     def __init__(self):
         self.elapsed_time = 0.0
@@ -16,8 +18,8 @@ class AutoRun:
 
     def update(self, boy, elapsed_time):
         self.elapsed_time += elapsed_time
-        next_x = boy.x + boy.face_dir * boy.WALK_SPEED * elapsed_time
-        left_edge = boy.SPRITE_WIDTH / 2
+        next_x = boy.x + self.SPEED * boy.face_dir * elapsed_time
+        left_edge = self.SIZE / 2
         right_edge = boy.CANVAS_WIDTH - left_edge
 
         if next_x <= left_edge:
@@ -155,12 +157,15 @@ class Boy:
         self.auto_run.exit(self)
 
     def draw(self):
-        if self.state in ('WALK', 'AUTORUN'):
+        if self.state in ('WALK'):
+            source_y = 100 if self.face_dir == 1 else 0
+        if self.state in ('AUTORUN'):
             source_y = 100 if self.face_dir == 1 else 0
         else:
             source_y = 300 if self.face_dir == 1 else 200
         angle = self.SLEEP_ANGLE if self.state == 'SLEEP' else 0
         draw_y = self.SLEEP_Y if self.state == 'SLEEP' else self.y
+        draw_size = self.auto_run.SIZE if self.state == 'AUTORUN' else self.SPRITE_WIDTH
         self.image.clip_composite_draw(
             self.frame * 100,
             source_y,
@@ -170,6 +175,6 @@ class Boy:
             ' ',
             self.x,
             draw_y,
-            self.SPRITE_WIDTH,
-            self.SPRITE_WIDTH,
+            draw_size,
+            draw_size,
         )
